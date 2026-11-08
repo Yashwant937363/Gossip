@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import { HydratedDocument } from "mongoose";
 
 export interface ITranslatedChat {
   language: string;
@@ -28,17 +29,27 @@ export interface IChat {
   translatedText: ITranslatedChat[];
 }
 
+export const SeenChat = {
+  Seen: true,
+  Received: false,
+  Sent: null,
+} as const;
+
+export type SeenChatType = (typeof SeenChat)[keyof typeof SeenChat];
+
 const chatSchema = new Schema<IChat>(
   {
     Sender_ID: {
       type: String,
       ref: "User",
       required: true,
+      index: true,
     },
     Receiver_ID: {
       type: String,
       ref: "User",
       required: true,
+      index: true,
     },
     text: {
       type: String,
@@ -61,4 +72,5 @@ const chatSchema = new Schema<IChat>(
 );
 
 const Chat = mongoose.model("Chat", chatSchema);
+export type ChatType = HydratedDocument<IChat>;
 export default Chat;

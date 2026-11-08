@@ -2,27 +2,27 @@ import { createServer } from "node:http";
 import { Server } from "socket.io";
 import connectDatabase from "./config/database.js";
 import { env } from "./config/env.js";
-import { authSocket } from "./middlewares/authSocket.js";
-import registerCallHandlers from "./sockets/call.js";
-import registerChatHandlers from "./sockets/chat.js";
-import registerSettingsHandlers from "./sockets/settings.js";
-import registerUserHandlers, { setupUserSession } from "./sockets/user.js";
+import { authSocket } from "./middlewares/authSocket.middleware.js";
+import registerCallHandlers from "./sockets/call.socket.js";
+import registerChatHandlers from "./sockets/chat.socket.js";
+import registerSettingsHandlers from "./sockets/settings.socket.js";
+import registerUserHandlers, { setupUserSession } from "./sockets/user.socket.js";
 import { UsersStore } from "./store/sessionStore.js";
 import app from "./app.js";
 import type {
-  ClientToServerEvents,
+  ClientToServerEventsTypes,
   InterServerEvents,
-  ServerToClientEvents,
+  ServerToClientEventsTypes,
   SocketData,
   TypedServer,
   TypedSocket,
-} from "./types/socket-types.js";
+} from "./types/socket.types.js";
 
 const httpServer = createServer(app);
 
 const io: TypedServer = new Server<
-  ClientToServerEvents,
-  ServerToClientEvents,
+  ClientToServerEventsTypes,
+  ServerToClientEventsTypes,
   InterServerEvents,
   SocketData
 >(httpServer, {

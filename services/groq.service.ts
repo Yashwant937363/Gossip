@@ -3,24 +3,24 @@ import type {
   ChatCompletionMessageParam,
 } from "groq-sdk/resources/chat/completions.js";
 import groq, { GROQ_MODELS } from "../config/groq.js";
-import ANALYZE_IMAGE_SYSTEM_PROMPT from "../prompts/analyze-image-prompt.js";
+import ANALYZE_IMAGE_SYSTEM_PROMPT from "../prompts/analyze-image.prompt.js";
 import {
   human_behavior_message,
   tone_templates,
-} from "../prompts/chatbot-prompts.js";
+} from "../prompts/chatbot.prompt.js";
 import input_system_prompt, {
   output_bullet_points,
   output_paragraph,
   output_structured,
-} from "../prompts/summarization-prompt.js";
-import TRANSLATE_CHAT_SYSTEM_PROMPT from "../prompts/translate-chat-prompt.js";
+} from "../prompts/summarization.prompt.js";
+import TRANSLATE_CHAT_SYSTEM_PROMPT from "../prompts/translate-chat.prompt.js";
 import {
   bulletSummarySchema,
   imageAnalysisSchema,
   paragraphSummarySchema,
   structuredSummarySchema,
   translateMessagesResponseSchema,
-} from "../schema/groq-schema.js";
+} from "../schema/groq.schema.js";
 import type {
   AnalyzeImageInput,
   ChatbotInput,
@@ -32,7 +32,7 @@ import type {
   Tone,
   TranslateMessagesInput,
   TranslateMessagesResult,
-} from "../types/groq-types.js";
+} from "../types/groq.types.js";
 
 /**
  * Type definition for Groq chat completion runner.

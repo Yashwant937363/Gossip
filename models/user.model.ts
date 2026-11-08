@@ -1,7 +1,12 @@
 import mongoose, { Schema } from "mongoose";
-import { UserSettings } from "../schema/settings-schema.js";
+import { IUser } from "../types/user.types.js";
+import {
+  SummarizationSettings,
+  TranslationSettings,
+  UserSettings,
+} from "../schema/settings.schema.js";
 
-const TranslationSettingsModelSchema = new Schema(
+const TranslationSettingsModelSchema = new Schema<TranslationSettings>(
   {
     language: { type: String, required: true, default: "original" },
     alwaysTranslate: { type: Boolean, default: false },
@@ -9,7 +14,7 @@ const TranslationSettingsModelSchema = new Schema(
   { _id: false },
 );
 
-const SummarizationSettingsModelSchema = new Schema(
+const SummarizationSettingsModelSchema = new Schema<SummarizationSettings>(
   {
     format: {
       type: String,
@@ -21,7 +26,7 @@ const SummarizationSettingsModelSchema = new Schema(
   { _id: false },
 );
 
-const UserSettingsModelSchema = new Schema(
+const UserSettingsModelSchema = new Schema<UserSettings>(
   {
     translation: {
       type: TranslationSettingsModelSchema,
@@ -35,17 +40,6 @@ const UserSettingsModelSchema = new Schema(
   { _id: false },
 );
 
-interface IUser {
-  Username: string;
-  FirstName: string;
-  LastName: string;
-  Email: string;
-  uid: string;
-  ProfilePicture: string;
-  Password: string;
-  settings: UserSettings;
-}
-// Define User Schema
 const userSchema = new Schema<IUser>(
   {
     Username: {

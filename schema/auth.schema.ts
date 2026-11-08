@@ -1,6 +1,6 @@
 import * as z from "zod";
-import { userSettingsSchema } from "./settings-schema.js";
-import type { UserSettings } from "./settings-schema.js";
+import { userSettingsSchema } from "./settings.schema.js";
+import type { UserSettings } from "./settings.schema.js";
 
 export const signupReqSchema = z.object({
   username: z.string().trim().min(1).max(50),
@@ -64,5 +64,5 @@ export interface SignupResponse {
 }
 
 export interface JWTPayload {
-  id: number;
+  id: string;
 }

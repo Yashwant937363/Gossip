@@ -4,13 +4,13 @@ import {
   generateChatbotReply,
   summarizeConversation,
   translateMessages,
-} from "../services/groq-service.js";
+} from "../services/groq.service.js";
 import type {
   AnalyzeImageInput,
   ChatbotInput,
   SummarizationInput,
   TranslateMessagesInput,
-} from "../types/groq-types.js";
+} from "../types/groq.types.js";
 
 export const handleChatbot = async (req: Request, res: Response) => {
   try {

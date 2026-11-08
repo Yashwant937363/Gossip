@@ -4,8 +4,8 @@ import {
   handleImageAnalyze,
   handleSummarize,
   handleTranslate,
-} from "../controllers/ai.js";
-import authUser from "../middlewares/authUser.js";
+} from "../controllers/ai.controller.js";
+import authUser from "../middlewares/authUser.middleware.js";
 
 const router = Router();
 

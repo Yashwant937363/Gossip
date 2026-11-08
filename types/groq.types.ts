@@ -1,4 +1,4 @@
-import type { Tone } from "../prompts/chatbot-prompts.js";
+import type { Tone } from "../prompts/chatbot.prompt.js";
 
 export type { Tone };
 

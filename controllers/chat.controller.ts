@@ -1,49 +1,37 @@
 import type { Request, Response } from "express";
 import fs from "node:fs";
-import Chat from "../models/chat.js";
-import User from "../models/user.js";
-import { JWTPayload } from "../schema/auth-schema.js";
-import { uploadImage } from "../services/cloudinary-service.js";
+import { JWTPayload } from "../schema/auth.schema.js";
+import { uploadImage } from "../services/cloudinary.service.js";
 import { UsersStore } from "../store/sessionStore.js";
 import {
   GetFriendsAndChatsResponse,
   UploadChatImageResponse,
-} from "../schema/chat-schema.js";
+} from "../schema/chat.schema.js";
+import {
+  findUserById,
+  findUsersByUids,
+} from "../repository/user.repository.js";
+import { getFriendUids } from "../repository/friend.repository.js";
+import { getUserChatHistory } from "../repository/chat.repository.js";
 
 export const getFriendsandChats = async (
   req: Request,
   res: Response<GetFriendsAndChatsResponse | { error: string }, JWTPayload>,
 ) => {
   try {
-    const user = await User.findById(res.locals.id);
+    const user = await findUserById(res.locals.id);
     if (!user) {
       return res.status(404).json({ msg: "User not Found" });
     }
 
     const uid = user.uid;
-    const friends = await Chat.find({
-      $or: [{ Sender_ID: uid }, { Receiver_ID: uid }],
-      type: "friend",
-    });
+    const friendUids = await getFriendUids(uid);
 
-    if (friends.length == 0) {
+    if (friendUids.length === 0) {
       return res.json({
         error: "no friends found",
       });
     }
-    console.log(
-      friends.map((item) => {
-        if (item.Sender_ID === uid) {
-          return item.Receiver_ID;
-        } else {
-          return item.Sender_ID;
-        }
-      }),
-    );
-
-    const friendUids = friends.map((item) =>
-      item.Sender_ID === uid ? item.Receiver_ID : item.Sender_ID,
-    );
 
     const offlineUids = [
       ...new Set(
@@ -51,12 +39,7 @@ export const getFriendsandChats = async (
       ),
     ];
 
-    const databaseUsers = offlineUids.length
-      ? await User.find(
-          { uid: { $in: offlineUids } },
-          { uid: 1, ProfilePicture: 1, Username: 1, _id: 0 },
-        ).lean()
-      : [];
+    const databaseUsers = await findUsersByUids(offlineUids);
 
     const databaseUserMap = new Map(
       databaseUsers.map((user) => [user.uid, user]),
@@ -91,10 +74,7 @@ export const getFriendsandChats = async (
       };
     });
 
-    let chats = await Chat.find({
-      $or: [{ Sender_ID: uid }, { Receiver_ID: uid }],
-      type: { $ne: "friend" },
-    }).select({ __v: 0 });
+    let chats = await getUserChatHistory(uid);
     // if (
     //   user.settings.translation.alwaysTranslate &&
     //   user.settings.translation.language !== "original"

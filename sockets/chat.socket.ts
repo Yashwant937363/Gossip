@@ -1,21 +1,31 @@
-import Chat from "../models/chat.js";
-import { translateMessages } from "../services/groq-service.js";
+import type { ChatType } from "../models/chat.model.js";
+import {
+  createChatMessage,
+  markMessagesAsSeen,
+} from "../repository/chat.repository.js";
+import { translateMessages } from "../services/groq.service.js";
 import type { UserStore } from "../store/sessionStore.js";
 import type {
+  ClientHandler,
   SeenMessagesPayload,
   SendMessagePayload,
   TypedServer,
   TypedSocket,
-} from "../types/socket-types.js";
+} from "../types/socket.types.js";
+
+import {
+  ClientToServerEvents,
+  ServertoClientEvents,
+} from "../types/socket.types.js";
 
 export default function registerChatHandlers(
   _io: TypedServer,
   socket: TypedSocket,
   usersStore: UserStore,
 ): void {
-  const sendMessage = async (
-    { touid, message, type }: SendMessagePayload,
-    acknowledgmentCallback: (result: any) => void,
+  const sendMessage: ClientHandler<ClientToServerEvents.SendMessage> = async (
+    { touid, message, type },
+    acknowledgmentCallback,
   ) => {
     try {
       const fromuid = socket.data.uid;
@@ -30,9 +40,14 @@ export default function registerChatHandlers(
       const receiver = usersStore.getUser(touid);
 
       if (receiver) {
-        let getTranslated: { language: string; translatedText: string } | undefined;
+        let getTranslated:
+          | { language: string; translatedText: string }
+          | undefined;
 
-        if (receiver.settings?.translation?.alwaysTranslate && type === "text") {
+        if (
+          receiver.settings?.translation?.alwaysTranslate &&
+          type === "text"
+        ) {
           try {
             const translationRes = await translateMessages({
               messages: [{ id: "new", text: message }],
@@ -50,7 +65,7 @@ export default function registerChatHandlers(
           }
         }
 
-        newChat = await Chat.create({
+        newChat = await createChatMessage({
           Sender_ID: fromuid,
           Receiver_ID: touid,
           text: message,
@@ -59,9 +74,9 @@ export default function registerChatHandlers(
           translatedText: getTranslated ? [getTranslated] : [],
         });
 
-        socket.to(touid).emit("chat:receivemessage", newChat);
+        socket.to(touid).emit(ServertoClientEvents.ReceiveMessage, newChat);
       } else {
-        newChat = await Chat.create({
+        newChat = await createChatMessage({
           Sender_ID: fromuid,
           Receiver_ID: touid,
           type: type,
@@ -77,19 +92,20 @@ export default function registerChatHandlers(
     }
   };
 
-  const receiverSeenMessages = async ({ fromuid }: SeenMessagesPayload) => {
+  const receiverSeenMessages: ClientHandler<
+    ClientToServerEvents.SeenMessages
+  > = async ({ fromuid }) => {
     try {
       const touid = socket.data.uid;
-      await Chat.updateMany(
-        { Sender_ID: fromuid, Receiver_ID: touid },
-        { seen: true },
-      );
-      socket.to(fromuid).emit("seenmessages", { uid: touid });
+      await markMessagesAsSeen(fromuid, touid);
+      socket
+        .to(fromuid)
+        .emit(ServertoClientEvents.SeenMessages, { uid: touid });
     } catch (error) {
       console.error("Error in chat:seenmessages handler:", error);
     }
   };
 
-  socket.on("chat:sendmessage", sendMessage);
-  socket.on("chat:seenmessages", receiverSeenMessages);
+  socket.on(ClientToServerEvents.SendMessage, sendMessage);
+  socket.on(ClientToServerEvents.SeenMessages, receiverSeenMessages);
 }

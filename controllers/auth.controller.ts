@@ -1,5 +1,9 @@
 import type { Request, Response } from "express";
-import User from "../models/user.js";
+import {
+  createUser,
+  findUserByEmail,
+  findUserById,
+} from "../repository/user.repository.js";
 import { nanoid } from "nanoid";
 import sharp from "sharp";
 import {
@@ -7,17 +11,18 @@ import {
   JWTPayload,
   SigninReq,
   SignupReq,
-} from "../schema/auth-schema.js";
-import { uploadImage } from "../services/cloudinary-service.js";
-import { compareHash, getHash } from "../services/bcrypt-service.js";
-import { generateToken } from "../services/jwt-service.js";
-import { generateEmailOtp, sendEmailOtp } from "../services/email-service.js";
+} from "../schema/auth.schema.js";
+import { uploadImage } from "../services/cloudinary.service.js";
+import { compareHash, getHash } from "../services/bcrypt.service.js";
+import { generateToken } from "../services/jwt.service.js";
+import { generateEmailOtp, sendEmailOtp } from "../services/email.service.js";
+import { processAndUploadImage } from "../services/image.service.js";
 
 export const getUser = async (
   req: Request,
   res: Response<GetUserResponse | { error: string }, JWTPayload>,
 ) => {
-  const user = await User.findById(res.locals.id);
+  const user = await findUserById(res.locals.id);
   if (user) {
     return res.status(200).json({
       msg: "Sussessfully Login",
@@ -41,7 +46,7 @@ export const signupUser = async (
 ) => {
   let url;
   try {
-    const existingUser = await User.findOne({ Email: req.body.email });
+    const existingUser = await findUserByEmail(req.body.email);
     if (existingUser) {
       return res
         .status(401)
@@ -51,30 +56,7 @@ export const signupUser = async (
       const inputimagepath = `./assets/profile/${req.file.filename}`;
       const outputimagepath = `./assets/profile/${req.body.email}.png`;
       try {
-        const imageProccesing = () => {
-          return new Promise((resolve, reject) => {
-            sharp(inputimagepath)
-              .resize({
-                width: 400,
-                height: 400,
-                fit: "cover",
-                withoutEnlargement: true,
-              })
-              .toFormat("png", {
-                quality: 100,
-                progressive: true,
-                chromaSubsampling: "4:2:0",
-              })
-              .toFile(outputimagepath, async (err, info) => {
-                if (err) {
-                  console.log("Error while proccessing an image", err);
-                  return res.json({ msg: "Something went wrong" });
-                }
-                resolve(await uploadImage(outputimagepath));
-              });
-          });
-        };
-        url = await imageProccesing();
+        url = await processAndUploadImage(inputimagepath, outputimagepath);
       } catch (sharperror) {
         console.log("Error while processing image Sharp Error :", sharperror);
         return res.status(500).json({ error: "Image Processing Error" });
@@ -83,7 +65,7 @@ export const signupUser = async (
 
     const password = await getHash(req.body.password);
 
-    const newUser = await User.create({
+    const newUser = await createUser({
       ProfilePicture: req.file ? url : "",
       Username: req.body.username,
       FirstName: req.body.fullname.firstname,
@@ -92,7 +74,7 @@ export const signupUser = async (
       Password: password,
       uid: nanoid(5),
     });
-    const authtoken = generateToken<JWTPayload>(newUser.id);
+    const authtoken = generateToken<JWTPayload>({ id: newUser.id });
     res.status(201).json({ authtoken: authtoken, uid: newUser.uid });
   } catch (error) {
     console.log("Server Error : " + error);
@@ -105,7 +87,7 @@ export const signinUser = async (
   res: Response,
 ) => {
   try {
-    const user = await User.findOne({ Email: req.body.email });
+    const user = await findUserByEmail(req.body.email);
 
     if (!user) {
       return res.status(401).json({ error: "Login with correct Credentials" });
@@ -116,7 +98,7 @@ export const signinUser = async (
       return res.status(401).json({ error: "Login with correct Credentials" });
     }
 
-    const authtoken = generateToken<JWTPayload>(user.id);
+    const authtoken = generateToken<JWTPayload>({ id: user.id });
     // Check and send the file if it exists
     res.status(200).json({
       authtoken,

@@ -14,4 +14,6 @@ export const userSettingsSchema = z.object({
   summarization: summarizationSettingsSchema,
 });
 
+export type TranslationSettings = z.infer<typeof translationSettingsSchema>;
+export type SummarizationSettings = z.infer<typeof summarizationSettingsSchema>;
 export type UserSettings = z.infer<typeof userSettingsSchema>;

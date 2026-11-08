@@ -1,24 +1,19 @@
 //api/auth/
 import { Router } from "express";
 import type { Request, Response } from "express";
-import authUser from "../middlewares/authUser.js";
-import upload from "../middlewares/upload.js";
-import { validateBody } from "../middlewares/validateBody.js";
-import { signinReqSchema, signupReqSchema } from "../schema/auth-schema.js";
+import authUser from "../middlewares/authUser.middleware.js";
+import upload from "../middlewares/upload.middleware.js";
+import { validateBody } from "../middlewares/validateBody.middleware.js";
+import { signinReqSchema, signupReqSchema } from "../schema/auth.schema.js";
 
 import {
   getUser,
   signinUser,
   signupUser,
   sendEmailOtpController,
-} from "../controllers/auth.js";
+} from "../controllers/auth.controller.js";
 
 const router = Router();
-
-router.get("/", (req: Request, res: Response) => {
-  res.send("hello from auth");
-});
-
 router.post("/getuser", authUser, getUser);
 
 router.post(

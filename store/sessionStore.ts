@@ -1,23 +1,15 @@
-export interface TranslationSettings {
-  language: string;
-  alwaysTranslate: boolean;
-}
-
-export interface SummarizationSettings {
-  format: "paragraph" | "bullet_points";
-}
-
-export interface UserSettings {
-  translation: TranslationSettings;
-  summarization: SummarizationSettings;
-}
+import {
+  SummarizationSettings,
+  TranslationSettings,
+  UserSettings,
+} from "../schema/settings.schema.js";
 
 export interface UserSession {
   uid: string;
   profile: string;
   username: string;
   settings: UserSettings;
-  [key: string]: unknown;
+  connected: boolean;
 }
 
 export interface UserSearchResult {

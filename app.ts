@@ -2,10 +2,10 @@ import cors from "cors";
 import express from "express";
 import pinoHttp from "pino-http";
 import { logger } from "./config/logger.js";
-import aiRouter from "./routes/ai.js";
-import authRouter from "./routes/auth.js";
-import chatRouter from "./routes/chat.js";
-import userRouter from "./routes/user.js";
+import aiRouter from "./routes/ai.routes.js";
+import authRouter from "./routes/auth.routes.js";
+import chatRouter from "./routes/chat.routes.js";
+import userRouter from "./routes/user.routes.js";
 
 const app = express();
 

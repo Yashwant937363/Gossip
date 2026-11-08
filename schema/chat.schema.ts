@@ -1,4 +1,4 @@
-import type { IChat } from "../models/chat.js";
+import type { IChat } from "../models/chat.model.js";
 
 export interface Friend {
   uid: string;
