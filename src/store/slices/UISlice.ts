@@ -4,14 +4,12 @@ export interface UIState {
   openedchat: any;
   previousPath: string;
   isEditorOpen: boolean;
-  warningmsg: string;
 }
 
 const initialState: UIState = {
   openedchat: false,
   previousPath: "/chat",
   isEditorOpen: false,
-  warningmsg: "",
 };
 
 const UISlice = createSlice({
@@ -27,9 +25,6 @@ const UISlice = createSlice({
     setEditorOpen: (state, action: PayloadAction<boolean>) => {
       state.isEditorOpen = action.payload;
     },
-    setWarningMsg: (state, action: PayloadAction<string>) => {
-      state.warningmsg = action.payload;
-    },
   },
 });
 
@@ -37,6 +32,5 @@ export const {
   changeOpenedChat,
   changePreviousPath,
   setEditorOpen,
-  setWarningMsg,
 } = UISlice.actions;
 export default UISlice.reducer;

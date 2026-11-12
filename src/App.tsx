@@ -5,14 +5,10 @@ import Home from "./Components/Home/Home";
 import Chat from "./Components/Chat/Chat";
 import NotFound from "./Components/NotFound/NotFound";
 import { useDispatch, useSelector } from "react-redux";
-import ErrorBar from "./Components/MsgBars/ErrorBar";
-import SuccessBar from "./Components/MsgBars/SuccessBar";
 import Account from "./Components/Account/Account";
 import {
   addRequest,
-  setErrorMsgUser,
   setOnline,
-  setSucessMsgUser,
 } from "./store/slices/UserSlice";
 import {
   addChat,
@@ -36,19 +32,14 @@ import { cancelVideoCall, initializeVideoCall } from "./store/slices/CallSlice";
 import { store, RootState, AppDispatch } from "./store/store";
 import { videoCallRingingReceiverSide } from "./socket/call";
 import ImageViewer from "./Components/Chat/ChatWindow/ImageViewer/ImageViewer";
-import { setWarningMsg } from "./store/slices/UISlice";
-import WarningBar from "./Components/MsgBars/WarningBar";
 import AISettings from "./Components/Settings/AISettings/AISettings";
 import { ServertoClientEvents } from "./types/socket.types";
+import { NotificationContainer } from "./Components/Notifications";
+import { notify } from "./utils/notify";
 
 export default function App() {
   const dispatch = useDispatch<AppDispatch>();
   const { isLogin, authtoken } = useSelector((state: RootState) => state.user);
-  const successmsg = useSelector((state: RootState) => state.user.successmsg);
-  const errormsg = useSelector((state: RootState) => state.user.errormsg);
-  const warningmsg = useSelector(
-    (state: RootState) => state.UIState.warningmsg,
-  );
   const themeColor = useSelector((state: RootState) => state.theme.themeColor);
   const themeMode = useSelector((state: RootState) => state.theme.themeMode);
   const colors = useSelector((state: RootState) => state.theme.colors);
@@ -78,12 +69,12 @@ export default function App() {
     );
 
     socket.on(ServertoClientEvents.SuccessMessage, ({ msg, user }: any) => {
-      if (msg) dispatch(setSucessMsgUser(msg));
+      if (msg) notify.success("Success", msg);
       if (user) dispatch(addFriend(user));
     });
 
     socket.on(ServertoClientEvents.ErrorMessage, (message: string) => {
-      dispatch(setErrorMsgUser(message));
+      notify.error("Error", message);
     });
 
     socket.on(ServertoClientEvents.FriendOnline, ({ uid }: { uid: string }) => {
@@ -122,7 +113,7 @@ export default function App() {
     );
 
     socket.on(ServertoClientEvents.VideoCallCanceled, () => {
-      dispatch(setErrorMsgUser("Call Ended"));
+      notify.info("Call Ended", "The call was ended");
       dispatch(cancelVideoCall());
     });
 
@@ -148,34 +139,6 @@ export default function App() {
       connectSocket(authtoken);
     }
   }, [isLogin, authtoken]);
-
-  // Auto-clear messages
-  useEffect(() => {
-    if (successmsg) {
-      const timer = setTimeout(() => {
-        dispatch(setSucessMsgUser(""));
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [successmsg, dispatch]);
-
-  useEffect(() => {
-    if (errormsg) {
-      const timer = setTimeout(() => {
-        dispatch(setErrorMsgUser(""));
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [errormsg, dispatch]);
-
-  useEffect(() => {
-    if (warningmsg) {
-      const timer = setTimeout(() => {
-        dispatch(setWarningMsg(""));
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [warningmsg, dispatch]);
 
   // Sync theme css variables
   useEffect(() => {
@@ -231,9 +194,7 @@ export default function App() {
 
   return (
     <>
-      {successmsg ? <SuccessBar msg={successmsg} /> : null}
-      {errormsg ? <ErrorBar msg={errormsg} /> : null}
-      {warningmsg ? <WarningBar msg={warningmsg} /> : null}
+      <NotificationContainer />
 
       <BrowserRouter>
         <Routes>

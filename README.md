@@ -208,7 +208,6 @@ Manages authentication and user profile state.
 - `settings.translation` - Language preference, always-translate toggle
 - `settings.summarization` - Summarization format preference
 - `requests` - Pending friend requests
-- `errormsg`, `successmsg` - User notifications
 
 **Async Thunks:**
 
@@ -321,8 +320,23 @@ Manages general UI state.
 
 **State:**
 
-- `warningmsg` - Warning notification message
 - `openedchat` - Currently opened chat window UID
+- `previousPath` - Navigation history path
+- `isEditorOpen` - Image editor modal toggle
+
+#### **NotificationSlice** (`src/store/slices/NotificationSlice.ts`)
+
+Centralized toast notification state.
+
+**State:**
+
+- `notifications` - Array of active notification items (`{ id, type, title, message }`)
+
+**Key Actions:**
+
+- `addNotification` - Add a notification
+- `removeNotification` - Dismiss a notification by id
+- `clearNotifications` - Clear all notifications
 
 ---
 

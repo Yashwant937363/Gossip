@@ -1,14 +1,12 @@
 import React from "react";
 import { PersonFill } from "react-bootstrap-icons";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  removeRequest,
-  setSucessMsgUser,
-} from "../../../../store/slices/UserSlice";
+import { removeRequest } from "../../../../store/slices/UserSlice";
 import { addFriend } from "../../../../store/slices/ChatSlice";
 import { requestAnswer } from "../../../../socket/main";
 import { motion } from "motion/react";
 import { RootState, AppDispatch } from "../../../../store/store";
+import { notify } from "../../../../utils/notify";
 
 interface RequestItemProps {
   uid: string;
@@ -33,7 +31,10 @@ export default function RequestItem({
         touid,
         answer,
       });
-      dispatch(setSucessMsgUser(res));
+      notify.success(
+        answer ? "Request Accepted" : "Request Rejected",
+        answer ? "You are now friends!" : "Friend request rejected",
+      );
       if (answer) {
         dispatch(
           addFriend({ uid, profile: profile || "", username, online: true }),
@@ -42,6 +43,7 @@ export default function RequestItem({
       dispatch(removeRequest(fromuid));
     } catch (err: any) {
       console.log("Error While Answering Request: ", err);
+      notify.error("Request Error", err.message || "Failed to answer request");
     }
   };
 

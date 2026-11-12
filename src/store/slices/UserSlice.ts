@@ -7,6 +7,7 @@ import {
   getAuthToken,
 } from "../../api/client";
 import { UserSettings } from "../../types";
+import { notify } from "../../utils/notify";
 
 export interface UserState {
   profile: string | null;
@@ -17,8 +18,6 @@ export interface UserState {
   authtoken: string;
   uid: string;
   settings: UserSettings;
-  errormsg: string;
-  successmsg: string;
   online: boolean;
   isLogin: boolean;
   isPending: boolean;
@@ -42,8 +41,6 @@ const initialState: UserState = {
       format: "paragraph",
     },
   },
-  errormsg: "",
-  successmsg: "",
   online: false,
   isLogin: false,
   isPending: false,
@@ -58,6 +55,7 @@ export const signUpUser = createAsyncThunk(
       if (data?.data?.authtoken) {
         Cookies.set("authtoken", data.data.authtoken, { expires: 365 });
         dispatch(getUser({ authtoken: data.data.authtoken }));
+        notify.success("Sign Up Successful", "Welcome to Gossip!");
       }
       return { data, status: 200 };
     } catch (error: any) {
@@ -65,7 +63,9 @@ export const signUpUser = createAsyncThunk(
       const errMsg =
         error.response?.data?.message ||
         error.response?.data?.error ||
-        error.message;
+        error.message ||
+        "Sign up failed";
+      notify.error("Sign Up Failed", errMsg);
       return { data: { error: errMsg }, status: error.response?.status || 500 };
     }
   },
@@ -76,10 +76,10 @@ export const signInUser = createAsyncThunk(
   async ({ signInData }: { signInData: any }, { dispatch }) => {
     try {
       const data = await apiSignIn(signInData);
-      console.log(data);
       if (data?.data?.authtoken) {
         Cookies.set("authtoken", data.data.authtoken, { expires: 365 });
         dispatch(getUser({ authtoken: data.data.authtoken }));
+        notify.success("Signed In", "Welcome back!");
       }
       return { data, status: 200 };
     } catch (error: any) {
@@ -87,7 +87,9 @@ export const signInUser = createAsyncThunk(
       const errMsg =
         error.response?.data?.message ||
         error.response?.data?.error ||
-        error.message;
+        error.message ||
+        "Sign in failed";
+      notify.error("Sign In Failed", errMsg);
       return { data: { error: errMsg }, status: error.response?.status || 500 };
     }
   },
@@ -154,12 +156,6 @@ const userSlice = createSlice({
     setProfile: (state, action: PayloadAction<string>) => {
       state.profile = action.payload;
     },
-    setErrorMsgUser: (state, action: PayloadAction<string>) => {
-      state.errormsg = action.payload;
-    },
-    setSucessMsgUser: (state, action: PayloadAction<string>) => {
-      state.successmsg = action.payload;
-    },
     setOnline: (state, action: PayloadAction<boolean>) => {
       state.online = action.payload;
     },
@@ -184,8 +180,6 @@ const userSlice = createSlice({
       const index = state.requests.findIndex((r) => r.uid === fromuid);
       if (index !== -1) {
         state.requests.splice(index, 1);
-      } else {
-        state.errormsg = "Request not found";
       }
     },
   },
@@ -204,13 +198,10 @@ const userSlice = createSlice({
         });
         state.uid = data.user_id || state.uid;
         state.isLogin = true;
-      } else {
-        state.errormsg = data.error || data.message || "Sign up failed";
       }
     });
-    builder.addCase(signUpUser.rejected, (state, action: any) => {
+    builder.addCase(signUpUser.rejected, (state) => {
       state.isPending = false;
-      state.errormsg = action.error?.message || "Sign up error";
     });
 
     // SignIn User
@@ -230,14 +221,11 @@ const userSlice = createSlice({
         state.uid = uid;
         state.settings = settings;
         state.isLogin = true;
-      } else {
-        state.errormsg = action.payload.data.error;
       }
       state.isPending = false;
     });
-    builder.addCase(signInUser.rejected, (state, action: any) => {
+    builder.addCase(signInUser.rejected, (state) => {
       state.isPending = false;
-      state.errormsg = action.error?.message || "Sign in error";
     });
 
     // Get User
@@ -277,13 +265,11 @@ const userSlice = createSlice({
         state.isLogin = true;
       } else {
         Cookies.remove("authtoken");
-        state.errormsg = data?.error || data?.message;
       }
     });
-    builder.addCase(getUser.rejected, (state, action: any) => {
+    builder.addCase(getUser.rejected, (state) => {
       state.isPending = false;
       Cookies.remove("authtoken");
-      state.errormsg = action.error?.message || "Get user error";
     });
   },
 });
@@ -295,8 +281,6 @@ export const {
   setAuthtoken,
   setOnline,
   setProfile,
-  setErrorMsgUser,
-  setSucessMsgUser,
   addRequest,
   changeLanguage,
   changeAlwaysTranslate,

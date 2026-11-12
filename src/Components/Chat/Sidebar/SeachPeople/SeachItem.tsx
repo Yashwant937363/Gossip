@@ -1,9 +1,9 @@
 import React from "react";
 import { PersonAdd, PersonFill } from "react-bootstrap-icons";
-import { useDispatch, useSelector } from "react-redux";
-import { setSucessMsgUser, setErrorMsgUser } from "../../../../store/slices/UserSlice";
+import { useSelector } from "react-redux";
 import { sendChatRequest } from "../../../../socket/main";
-import { RootState, AppDispatch } from "../../../../store/store";
+import { RootState } from "../../../../store/store";
+import { notify } from "../../../../utils/notify";
 
 interface SeachItemProps {
   uid: string;
@@ -12,15 +12,14 @@ interface SeachItemProps {
 }
 
 export default function SeachItem({ profile, username, uid }: SeachItemProps) {
-  const dispatch = useDispatch<AppDispatch>();
   const fromuid = useSelector((state: RootState) => state.user.uid);
 
   const handlePersonAdd = () => {
     sendChatRequest(fromuid, uid)
-      .then((data) => dispatch(setSucessMsgUser(data)))
+      .then((data) => notify.success("Request Sent", data || "Chat request sent"))
       .catch((error) => {
         console.error("Error sending request:", error);
-        dispatch(setErrorMsgUser(error.message || "Failed to send request"));
+        notify.error("Request Failed", error.message || "Failed to send request");
       });
   };
 

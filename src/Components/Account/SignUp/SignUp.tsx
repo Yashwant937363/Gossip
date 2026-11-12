@@ -10,16 +10,15 @@ import {
   PersonBadge,
 } from "react-bootstrap-icons";
 import {
-  setErrorMsgUser,
   setProfile,
   setSignUpDetails,
-  setSucessMsgUser,
   signUpUser,
 } from "../../../store/slices/UserSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useToggle } from "../../Hooks/useToggle";
 import { apiSendEmailOtp } from "../../../api/client";
 import { RootState, AppDispatch } from "../../../store/store";
+import { notify } from "../../../utils/notify";
 
 interface SignUpProps {
   signup?: boolean;
@@ -52,7 +51,7 @@ export default function SignUp({}: SignUpProps) {
   const handleSendEmailOtp = async () => {
     const email = watch("email");
     if (!email || email.trim() === "") {
-      dispatch(setErrorMsgUser("Please enter email first"));
+      notify.warning("Validation", "Please enter email first");
       return;
     }
     setOtpLoading(true);
@@ -62,12 +61,10 @@ export default function SignUp({}: SignUpProps) {
       if (response?.otp) {
         setServerOTP(response.otp.toString());
       }
-      dispatch(setSucessMsgUser(response.message || "OTP sent to your email"));
+      notify.success("OTP Sent", response.message || "OTP sent to your email");
     } catch (err: any) {
       console.error(err);
-      dispatch(
-        setErrorMsgUser(err.response?.data?.message || "Failed to send OTP"),
-      );
+      notify.error("OTP Failed", err.response?.data?.message || "Failed to send OTP");
     } finally {
       setOtpLoading(false);
     }
@@ -75,7 +72,7 @@ export default function SignUp({}: SignUpProps) {
 
   const handleVerifyOTP = () => {
     if (!inputOTP || inputOTP.trim() === "") {
-      dispatch(setErrorMsgUser("Please enter the received OTP"));
+      notify.warning("Validation", "Please enter the received OTP");
       return;
     }
     setOtpLoading(true);
@@ -83,9 +80,9 @@ export default function SignUp({}: SignUpProps) {
       // If server returned an OTP check it, otherwise allow verification if OTP was sent
       if (!serverOTP || serverOTP === inputOTP.trim()) {
         setVerified(true);
-        dispatch(setSucessMsgUser("Email Verification Successful"));
+        notify.success("Verified", "Email Verification Successful");
       } else {
-        dispatch(setErrorMsgUser("Invalid OTP entered"));
+        notify.error("Invalid OTP", "Invalid OTP entered");
       }
       setOtpLoading(false);
     }, 500);
@@ -98,7 +95,7 @@ export default function SignUp({}: SignUpProps) {
     password: string;
   }) => {
     if (!isVerified) {
-      dispatch(setErrorMsgUser("Please verify your email first"));
+      notify.warning("Verification Required", "Please verify your email first");
       return;
     }
 
