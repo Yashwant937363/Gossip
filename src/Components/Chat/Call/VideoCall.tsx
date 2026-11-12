@@ -27,6 +27,7 @@ import { socketCancelVideoCall } from "../../../socket/call";
 import { motion, useAnimate } from "motion/react";
 import VirtualBackgroundExtension from "agora-extension-virtual-background";
 import { RootState, AppDispatch } from "../../../store/store";
+import { ServertoClientEvents } from "../../../types/socket.types";
 
 const virtualBackgrounds = [
   "/virtual_backgrounds/background1.jpg",
@@ -45,9 +46,12 @@ export default function VideoCall() {
   const [isvDrawerOpen, setvDrawerOpen] = useState(false);
   const [cameraFocus, setCameraFocus] = useState(false);
   const caller = useSelector((state: RootState) => state.call.caller);
-  const callInitialize = useSelector((state: RootState) => state.call.callInitialize);
+  const callInitialize = useSelector(
+    (state: RootState) => state.call.callInitialize,
+  );
   const profile = useSelector((state: RootState) => state.user.profile);
-  const appID = import.meta.env.VITE_AGORA_APP_ID || "7687706453784212a454267521654b1a";
+  const appID =
+    import.meta.env.VITE_AGORA_APP_ID || "7687706453784212a454267521654b1a";
 
   useJoin({ appid: appID, channel: "timepass", token: null }, callInitialize);
   const [status, setStatus] = useState("calling");
@@ -148,11 +152,11 @@ export default function VideoCall() {
   };
 
   useEffect(() => {
-    socket.on("call:videocallringing", () => {
+    socket.on(ServertoClientEvents.VideoCallRinging, () => {
       setStatus("ringing");
     });
     return () => {
-      socket.off("call:videocallringing");
+      socket.off(ServertoClientEvents.VideoCallRinging);
     };
   }, []);
 
@@ -168,12 +172,18 @@ export default function VideoCall() {
           >
             <div className="w-32 h-32 rounded-full overflow-hidden border-2 border-themeColor bg-bg20 flex items-center justify-center">
               {caller?.profile ? (
-                <img src={caller.profile} alt={caller.username} className="w-full h-full object-cover" />
+                <img
+                  src={caller.profile}
+                  alt={caller.username}
+                  className="w-full h-full object-cover"
+                />
               ) : (
                 <PersonFill className="text-6xl text-textColor opacity-70" />
               )}
             </div>
-            <span className="text-base font-semibold text-white capitalize animate-pulse">{status}...</span>
+            <span className="text-base font-semibold text-white capitalize animate-pulse">
+              {status}...
+            </span>
           </div>
         ) : (
           remoteUsers.map((user) => (
@@ -197,7 +207,9 @@ export default function VideoCall() {
           layout
           onClick={(e) => handleCameraFocus("local", e)}
           className={`absolute bottom-20 right-4 rounded-2xl overflow-hidden border-2 border-themeColor shadow-2xl z-30 transition-all ${
-            cameraFocus ? "w-full h-full bottom-0 right-0 rounded-none border-none" : "w-36 sm:w-48 h-28 sm:h-36"
+            cameraFocus
+              ? "w-full h-full bottom-0 right-0 rounded-none border-none"
+              : "w-36 sm:w-48 h-28 sm:h-36"
           }`}
         >
           <LocalUser
@@ -294,11 +306,17 @@ export default function VideoCall() {
           type="button"
           onClick={() => setMic(!micOn)}
           className={`p-3.5 rounded-full shadow-lg transition-all cursor-pointer ${
-            micOn ? "bg-bg20 text-white hover:bg-bg30" : "bg-rose-500 text-white"
+            micOn
+              ? "bg-bg20 text-white hover:bg-bg30"
+              : "bg-rose-500 text-white"
           }`}
           title={micOn ? "Mute Microphone" : "Unmute Microphone"}
         >
-          {micOn ? <MicFill className="text-xl" /> : <MicMuteFill className="text-xl" />}
+          {micOn ? (
+            <MicFill className="text-xl" />
+          ) : (
+            <MicMuteFill className="text-xl" />
+          )}
         </button>
 
         {/* End call button */}
@@ -316,11 +334,17 @@ export default function VideoCall() {
           type="button"
           onClick={() => setCamera(!cameraOn)}
           className={`p-3.5 rounded-full shadow-lg transition-all cursor-pointer ${
-            cameraOn ? "bg-bg20 text-white hover:bg-bg30" : "bg-rose-500 text-white"
+            cameraOn
+              ? "bg-bg20 text-white hover:bg-bg30"
+              : "bg-rose-500 text-white"
           }`}
           title={cameraOn ? "Turn Camera Off" : "Turn Camera On"}
         >
-          {cameraOn ? <CameraVideoFill className="text-xl" /> : <CameraVideoOffFill className="text-xl" />}
+          {cameraOn ? (
+            <CameraVideoFill className="text-xl" />
+          ) : (
+            <CameraVideoOffFill className="text-xl" />
+          )}
         </button>
       </div>
     </div>

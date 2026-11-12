@@ -9,6 +9,7 @@ import {
 import { socket } from "../../../socket/main";
 import { useNavigate } from "react-router-dom";
 import { RootState, AppDispatch } from "../../../store/store";
+import { ClientToServerEvents } from "../../../types/socket.types";
 
 export default function AISettings() {
   const dispatch = useDispatch<AppDispatch>();
@@ -39,19 +40,21 @@ export default function AISettings() {
 
   const handleLanguageChange = (newLang: string) => {
     dispatch(changeLanguage(newLang));
-    socket.emit("settings:translate:languageChange", { language: newLang });
+    socket.emit(ClientToServerEvents.ChangeLanguage, { language: newLang });
   };
 
   const handleAlwaysTranslateChange = (val: boolean) => {
     dispatch(changeAlwaysTranslate(val));
-    socket.emit("settings:translate:alwaysTranslateChange", {
+    socket.emit(ClientToServerEvents.ChangeAlwaysTranslate, {
       alwaysTranslate: val,
     });
   };
 
   const handleFormatChange = (newFormat: string) => {
     dispatch(changeSummarizationFormat(newFormat));
-    socket.emit("settings:summarization:formatChange", { format: newFormat });
+    socket.emit(ClientToServerEvents.ChangeSummarizationFormat, {
+      format: newFormat,
+    });
   };
 
   useEffect(() => {

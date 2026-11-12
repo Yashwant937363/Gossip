@@ -32,7 +32,6 @@ export default function Navbar({ title }: NavbarProps) {
     const token = Cookies.get("authtoken");
     if (token) {
       dispatch(getUser({ authtoken: token }));
-      dispatch(setAuthtoken(token));
     }
   }, [dispatch]);
 

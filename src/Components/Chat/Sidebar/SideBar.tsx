@@ -82,8 +82,7 @@ export default function SideBar() {
           </button>
         </div>
       </div>
-
-      {addperson && <SeachPeople />}
+      <AnimatePresence>{addperson && <SeachPeople />}</AnimatePresence>
 
       {/* AI Bot item */}
       <ListItem

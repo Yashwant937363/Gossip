@@ -101,7 +101,7 @@ export default function ReceivedChat({
             : position === "last"
               ? "rounded-tl-sm"
               : ""
-        }`}
+        } ${type === "image" && "flex-col"}`}
       >
         {type === "text" ? (
           <div>
@@ -129,7 +129,7 @@ export default function ReceivedChat({
           />
         )}
 
-        <div className="flex items-center justify-end text-[10px] opacity-70 mt-0.5">
+        <div className="flex items-center justify-start text-[10px] opacity-70 mt-0.5">
           <span>{formatTime(time)}</span>
         </div>
       </motion.div>

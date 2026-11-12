@@ -16,7 +16,11 @@ interface RequestItemProps {
   profile?: string;
 }
 
-export default function RequestItem({ profile, username, uid }: RequestItemProps) {
+export default function RequestItem({
+  profile,
+  username,
+  uid,
+}: RequestItemProps) {
   const touid = useSelector((state: RootState) => state.user.uid);
   const tousername = useSelector((state: RootState) => state.user.username);
   const dispatch = useDispatch<AppDispatch>();
@@ -28,11 +32,12 @@ export default function RequestItem({ profile, username, uid }: RequestItemProps
         fromuid,
         touid,
         answer,
-        tousername,
       });
       dispatch(setSucessMsgUser(res));
       if (answer) {
-        dispatch(addFriend({ uid, profile: profile || "", username, online: true }));
+        dispatch(
+          addFriend({ uid, profile: profile || "", username, online: true }),
+        );
       }
       dispatch(removeRequest(fromuid));
     } catch (err: any) {
@@ -45,7 +50,11 @@ export default function RequestItem({ profile, username, uid }: RequestItemProps
       <div className="flex items-center gap-2.5 min-w-0">
         <div className="w-9 h-9 rounded-full overflow-hidden bg-bg20 flex-shrink-0 flex items-center justify-center">
           {profile ? (
-            <img src={profile} alt={username} className="w-full h-full object-cover" />
+            <img
+              src={profile}
+              alt={username}
+              className="w-full h-full object-cover"
+            />
           ) : (
             <PersonFill className="text-lg text-textColor opacity-70" />
           )}

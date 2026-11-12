@@ -25,6 +25,7 @@ A feature-rich real-time messaging and video calling application built with Reac
 ## ✨ Features
 
 ### Core Messaging
+
 - **Real-time Chat**: Instant peer-to-peer messaging with Socket.IO
 - **Chat Requests**: Send and manage friend connection requests
 - **Message Status**: Track read/unread messages with seen indicators
@@ -33,6 +34,7 @@ A feature-rich real-time messaging and video calling application built with Reac
 - **Image Viewer**: Dedicated component for viewing shared images
 
 ### AI Features
+
 - **AI ChatBot**: Integrated AI assistant for conversations with customizable response tones
 - **Auto-Translation**: Automatic message translation with language selection
   - Supported Languages: English, Hindi, Marathi, Spanish, Punjabi
@@ -45,8 +47,9 @@ A feature-rich real-time messaging and video calling application built with Reac
 - **Image Analysis**: AI-powered image description using `ai:image-analyze` events
 
 ### Video Communication
+
 - **Real-time Video Calls**: Peer-to-peer video calling using Agora RTC SDK
-- **Virtual Backgrounds**: 
+- **Virtual Backgrounds**:
   - Blur background
   - Color background
   - Custom image background
@@ -54,9 +57,10 @@ A feature-rich real-time messaging and video calling application built with Reac
 - **Call Status Tracking**: Visual indicators for ringing, connected, and ended states
 
 ### User Experience
+
 - **Authentication**: Email-based signup/signin with JWT token-based auth
 - **User Profiles**: Profile pictures, user information, and account settings
-- **Customizable Themes**: 
+- **Customizable Themes**:
   - Light/Dark mode toggle
   - Custom color themes
   - CSS variables for dynamic styling (--theme-color, --theme-mode)
@@ -72,20 +76,21 @@ A feature-rich real-time messaging and video calling application built with Reac
 
 ```
 src/
-  App.jsx              Main app component with routing and socket event listeners
-  main.jsx             React root with Redux store and Agora provider
-  
+  App.tsx              Main app component with routing and socket event listeners
+  main.tsx             React root with Redux store and Agora provider
+
   Components/          React components organized by feature
-    Home/              Landing/home page
+    Home/              Landing/home page with Three.js 3D hero background
     Chat/              Chat interface and messaging UI
       ChatWindow/      Chat display with message rendering
         ChatContainer/ Real-time message list
         ChatDate/      Date separator with summarization
-        Received.jsx   Message reception with translation UI
+        Received.tsx   Message reception with translation UI
         ImageEditor/   Image upload and editing
         ImageViewer/   Image preview component
+      Sidebar/         User search, friend requests tabs, friend list
       Call/            Video call interface
-        VideoCall.jsx  Video call UI with background effects
+        VideoCall.tsx  Video call UI with background effects
     ChatBot/           AI assistant interface
     Account/           Authentication (signin/signup)
     Settings/          User preferences
@@ -96,25 +101,32 @@ src/
     MsgBars/           Toast notifications (Success, Error, Warning)
     Buttons/           Reusable button components
     Hooks/             Custom React hooks
-  
+
   store/               Redux Toolkit state management
-    store.js           Store configuration
+    store.ts           Store configuration
     slices/
-      UserSlice.js     Authentication, user data, settings
-      ChatSlice.js     Messages, friends, chat state
-      CallSlice.js     Video call state management
-      ThemeSlice.js    Theme and styling preferences
-      AIChatBotSlice.js AI chatbot messages
-      UISlice.js       UI state (modals, warnings)
-  
+      UserSlice.ts     Authentication, user data, settings
+      ChatSlice.ts     Messages, friends, chat state
+      CallSlice.ts     Video call state management
+      ThemeSlice.ts    Theme and styling preferences
+      AIChatBotSlice.ts AI chatbot messages
+      UISlice.ts       UI state (modals, warnings)
+
   socket/              WebSocket event handlers
-    main.js            Socket initialization and core events
-    call.js            Video call events
-    ai.js              AI feature events
-  
+    main.ts            Socket initialization, handshake auth, and core events
+    call.ts            Video call events
+    ai.ts              AI feature endpoints / wrappers
+
+  types/               TypeScript type definitions & socket event enums
+    index.ts           Shared data structures, chat models, and user interfaces
+    socket.types.ts    Typed socket enums (ServertoClientEvents, ClientToServerEvents)
+
+  api/                 Centralized Axios HTTP client
+    client.ts          REST API helpers for Auth, User search, Chat, and AI
+
   service/             Utility services
-    PeerService.js     WebRTC peer connection management
-  
+    PeerService.ts     WebRTC peer connection management
+
   assets/              Static assets (images, icons)
   index.css            Global styles
 ```
@@ -131,31 +143,38 @@ src/
 ## 🛠️ Tech Stack
 
 ### Frontend Framework
+
 - **React 18.2** - UI library
+- **TypeScript 5.x** - Static typing, interfaces, and socket event enums
 - **Vite 5.0** - Build tool and dev server
 - **React Router 6.21** - Client-side routing
 
 ### State Management & Forms
+
 - **Redux Toolkit 2.0** - Predictable state management
 - **React Redux 9.0** - React bindings for Redux
 - **React Hook Form 7.49** - Efficient form handling
 
 ### Real-time Communication
+
 - **Socket.IO Client 4.7** - Real-time bidirectional communication
 - **Agora RTC SDK 4.22** - Video/audio conferencing
 - **Agora RTC React 2.3** - React bindings for Agora
 - **Agora Virtual Background 2.0** - Background effects for video
 
 ### UI & Styling
+
 - **Motion 11.15** - Animation library (Framer Motion alternative)
 - **React Bootstrap Icons 1.10** - Icon components
 - **Emoji Mart 5.6** - Emoji picker with React integration
 - **React Dropdown 1.11** - Dropdown component
 
 ### Image Processing
+
 - **Syncfusion Image Editor 28.1** - Professional image editing
 
 ### Media & Utilities
+
 - **React Player 2.16** - Media player component
 - **Three.js 0.170** - 3D graphics
 - **React Three Fiber 8.17** - React renderer for Three.js
@@ -164,6 +183,7 @@ src/
 - **Axios 1.6** - HTTP client
 
 ### Development Tools
+
 - **ESLint 8.55** - Code linting
 - **Vite Plugin React 4.2** - Fast Refresh for React
 
@@ -173,10 +193,12 @@ src/
 
 ### Redux Slices
 
-#### **UserSlice** (`src/store/slices/UserSlice.js`)
+#### **UserSlice** (`src/store/slices/UserSlice.ts`)
+
 Manages authentication and user profile state.
 
 **State:**
+
 - `profile` - User avatar/profile image URL
 - `fullname`, `username`, `email`, `dob` - User details
 - `authtoken` - JWT authentication token
@@ -189,55 +211,62 @@ Manages authentication and user profile state.
 - `errormsg`, `successmsg` - User notifications
 
 **Async Thunks:**
+
 - `signUpUser` - POST `/api/auth/signup`
 - `signInUser` - POST `/api/auth/signin`
 - `getUser` - POST `/api/auth/getuser` (auto-login)
 
 **Key Actions:**
+
 - `addRequest` - Add incoming friend request
 - `removeRequest` - Remove friend request
 - `changeLanguage` - Update translation language
 - `changeAlwaysTranslate` - Toggle automatic translation
 - `changeSummarizationFormat` - Update summary format
 
-#### **ChatSlice** (`src/store/slices/ChatSlice.js`)
+#### **ChatSlice** (`src/store/slices/ChatSlice.ts`)
+
 Manages friends list and chat messages.
 
 **State:**
+
 - `friends` - Array of friend objects with online status
 - `chats` - Array of message objects
 - `pending` - Loading state
 
 **Friend Object Structure:**
-```javascript
+
+```typescript
 {
-  uid: string,
-  username: string,
-  profile: string (avatar URL),
-  online: boolean,
-  email: string
+  uid: string;
+  username: string;
+  profile: string; // avatar URL
+  online: boolean;
+  email: string;
 }
 ```
 
 **Message Object Structure:**
-```javascript
+
+```typescript
 {
-  _id: ObjectId,
-  Sender_ID: string,
-  Receiver_ID: string,
-  text: string,
-  type: "text" | "image",
-  seen: boolean,
-  createdAt: timestamp,
-  translatedText: [{ language: string, translatedText: string }]
+  _id: string;
+  Sender_ID: string;
+  Receiver_ID: string;
+  text: string;
+  type: "text" | "image";
+  seen: boolean;
+  createdAt: string | Date;
+  translatedText: [{ language: string; translatedText: string }];
 }
 ```
 
 **Async Thunks:**
-- `fetchFriends` - GET `/api/chat/getFriends`
-- `fetchChats` - GET `/api/chat/`
+
+- `fetchFriends` - POST `/api/chat/getFriends`
 
 **Key Actions:**
+
 - `addChat` - Add new message to state
 - `addFriend` - Add friend to friends list
 - `setFriendOnline/Offline` - Update friend status
@@ -245,170 +274,220 @@ Manages friends list and chat messages.
 - `setMultipleTranslatedMessages` - Add batch translations
 - `setSingleTranslatedMessage` - Add single translation
 
-#### **CallSlice** (`src/store/slices/CallSlice.js`)
+#### **CallSlice** (`src/store/slices/CallSlice.ts`)
+
 Manages video call state.
 
 **State:**
+
 - `incomingCall` - Incoming call object
 - `onCall` - Current call status
 - `callType` - "incomingvideo" or "outgoingvideo"
 - `caller` - Caller information
 
 **Key Actions:**
+
 - `initializeVideoCall` - Start new call
 - `cancelVideoCall` - End call
 
-#### **ThemeSlice** (`src/store/slices/ThemeSlice.js`)
+#### **ThemeSlice** (`src/store/slices/ThemeSlice.ts`)
+
 Manages UI theme preferences.
 
 **State:**
+
 - `themeColor` - Primary accent color
 - `themeMode` - "white" (light) or "black" (dark)
 - `colors` - Color palette with RGB values
 
 **Key Actions:**
+
 - `setThemeColor` - Update accent color
 - `setThemeMode` - Toggle light/dark mode
 
-#### **AIChatBotSlice** (`src/store/slices/AIChatBotSlice.js`)
+#### **AIChatBotSlice** (`src/store/slices/AIChatBotSlice.ts`)
+
 Manages AI chatbot conversation history.
 
 **State:**
-- `messages` - Array of chatbot messages
-- `loading` - Loading indicator
 
-#### **UISlice** (`src/store/slices/UISlice.js`)
+- `tones` - Supported personality tones
+- `selectedTone` - Current conversation tone
+- `messages` - Array of chatbot messages
+
+#### **UISlice** (`src/store/slices/UISlice.ts`)
+
 Manages general UI state.
 
 **State:**
+
 - `warningmsg` - Warning notification message
 - `openedchat` - Currently opened chat window UID
 
 ---
 
-## 🔌 WebSocket Events
+## 🔌 WebSocket Events & Types
 
-All Socket.IO events are namespaced with descriptive prefixes for organization.
+All Socket.IO events are strictly typed using TypeScript enums and interfaces in `src/types/socket.types.ts`. Authentication is handled via the connection handshake:
 
-### User Management Events
+```typescript
+// Socket handshake authentication
+export const socket = io(SERVER_URL, {
+  auth: {
+    token: `Bearer ${authtoken}`,
+  },
+  autoConnect: false,
+  reconnection: true,
+});
+```
 
-#### Emit (Client → Server)
-```javascript
-socket.emit("user:connection", { username, profile, uid, settings }, callback)
-// Establishes user connection with settings
+### Event Enums (`src/types/socket.types.ts`)
 
-socket.emit("user:finduser", uid, callback)
+#### Server-to-Client Events (`ServertoClientEvents`)
+- `ReceiveMessage`: `"chat:receivemessage"` - Incoming message broadcast
+- `SeenMessages`: `"chat:seenmessages"` - Notification that messages were viewed
+- `FriendOnline`: `"user:friendonline"` - User came online
+- `FriendOffline`: `"user:friendoffline"` - User went offline
+- `RequestFromUser`: `"user:requestfromuser"` - Incoming friend request
+- `SuccessMessage`: `"successmessage"` - Operation success notification
+- `ErrorMessage`: `"errormessage"` - Operation error notification
+- `VideoCallIncoming`: `"call:videocallincoming"` - Incoming video call
+- `VideoCallRinging`: `"call:videocallringing"` - Remote peer ringing
+- `VideoCallAnswer`: `"call:videocallanswer"` - Call answered
+- `VideoCallCanceled`: `"call:videocallcanceled"` - Call ended/canceled
+
+#### Client-to-Server Events (`ClientToServerEvents`)
+- `SendMessage`: `"chat:sendmessage"` - Send message with ack callback
+- `SeenMessages`: `"chat:seenmessages"` - Mark messages as read
+- `SendChatRequest`: `"user:sendchatrequest"` - Send friend request
+- `RequestAnswer`: `"user:requestanswer"` - Accept/reject friend request
+- `VideoCallOutgoing`: `"call:videocalloutgoing"` - Trigger outgoing call
+- `VideoCallRinging`: `"call:videocallringing"` - Ringing confirmation
+- `VideoCallAnswer`: `"call:videocallanswer"` - Accept call offer
+- `VideoCallCanceled`: `"call:videocallcanceled"` - Hang up or decline call
+- `ChangeLanguage`: `"settings:translate:languageChange"` - Update translation language
+- `ChangeAlwaysTranslate`: `"settings:translate:alwaysTranslateChange"` - Toggle auto-translation
+- `ChangeSummarizationFormat`: `"settings:summarization:formatChange"` - Update summary format
+
+socket.emit("user:finduser", uid, callback);
 // Search for users to add as friends
 // Returns: Array of user objects
 
-socket.emit("user:sendchatrequest", fromuid, touid, callback)
+socket.emit("user:sendchatrequest", fromuid, touid, callback);
 // Send friend request to user
 // Returns: Request confirmation
 
-socket.emit("user:requestanswer", { fromuid, touid, answer, tousername }, callback)
+socket.emit("user:requestanswer", { fromuid, touid, answer }, callback);
 // Respond to friend request (accept/reject)
 // answer: "accept" | "reject"
 ```
 
 #### Listen (Server → Client)
+
 ```javascript
-socket.on("requestfromuser", ({ uid, profile, username }))
+socket.on("requestfromuser", { uid, profile, username });
 // Incoming friend request notification
 
-socket.on("successmessage", ({ msg, user }))
+socket.on("successmessage", { msg, user });
 // Friend request accepted notification
 
-socket.on("errormessage", (message))
+socket.on("errormessage", message);
 // Error notification
 
-socket.on("friendonline", ({ uid }))
+socket.on("friendonline", { uid });
 // Friend came online
 
-socket.on("friendoffline", ({ uid }))
+socket.on("friendoffline", { uid });
 // Friend went offline
 ```
 
 ### Chat Events
 
 #### Emit (Client → Server)
+
 ```javascript
-socket.emit("chat:sendmessage", { fromuid, touid, message, type }, callback)
+socket.emit("chat:sendmessage", { fromuid, touid, message, type }, callback);
 // Send message to friend
 // type: "text" | "image"
 // Returns: Message object with _id
 
-socket.emit("chat:seenmessages", { fromuid, touid })
+socket.emit("chat:seenmessages", { fromuid, touid });
 // Mark messages as read
 ```
 
 #### Listen (Server → Client)
+
 ```javascript
-socket.on("chat:receivemessage", (newChat))
+socket.on("chat:receivemessage", newChat);
 // Receive new message from friend
 // Payload: Full message object
 
-socket.on("seenmessages", ({ uid }))
+socket.on("seenmessages", { uid });
 // Notification that friend read messages
 ```
 
 ### Video Call Events
 
 #### Emit (Client → Server)
+
 ```javascript
-socket.emit("call:videocalloutgoing", { fromuid, touid })
+socket.emit("call:videocalloutgoing", { fromuid, touid });
 // Initiate outgoing video call
 
-socket.emit("call:videocallcanceled", { touid })
+socket.emit("call:videocallcanceled", { touid });
 // Cancel call
 
-socket.emit("call:videocallringing", { fromuid })
+socket.emit("call:videocallringing", { fromuid });
 // Send ringing signal from receiver
 ```
 
 #### Listen (Server → Client)
+
 ```javascript
-socket.on("call:videocallincoming", ({ fromuid }))
+socket.on("call:videocallincoming", { fromuid });
 // Receive incoming call notification
 
-socket.on("call:videocallcanceled")
+socket.on("call:videocallcanceled");
 // Call was canceled
 
-socket.on("call:videocallringing")
+socket.on("call:videocallringing");
 // Receiver's ringing response
 ```
 
 ### AI Features Events
 
 #### Emit (Client → Server)
+
 ```javascript
-socket.emit("ai:chatbot:fromclient", { message, uid, tone }, callback)
+socket.emit("ai:chatbot:fromclient", { message, uid, tone }, callback);
 // Send message to AI chatbot
 // tone: Response tone preference
 // Returns: AI response
 
-socket.emit("ai:summarization", { conversation, format }, callback)
+socket.emit("ai:summarization", { conversation, format }, callback);
 // Summarize conversation
 // format: "paragraph" | "bullet" | "structured"
 // Returns: Summary object
 
-socket.emit("ai:translate:single-message", { id, text, to }, callback)
+socket.emit("ai:translate:single-message", { id, text, to }, callback);
 // Translate single message
 // to: Target language (lowercase)
 // Returns: { translatedText, language }
 
-socket.emit("ai:translate:multiple-messages", { messages, to }, fromuid)
+socket.emit("ai:translate:multiple-messages", { messages, to }, fromuid);
 // Batch translate messages
 // messages: [{ id, text }]
 // Returns via: socket.on("ai:translated:multiple-messages")
 
-socket.emit("ai:image-analyze", { url }, callback)
+socket.emit("ai:image-analyze", { url }, callback);
 // Generate AI description for image
 // Returns: Image description object
 ```
 
 #### Listen (Server → Client)
+
 ```javascript
-socket.on("ai:translated:multiple-messages", (data))
+socket.on("ai:translated:multiple-messages", data);
 // Batch translation results
 // Payload: { messages: [{ id, translatedText }], language }
 ```
@@ -416,14 +495,18 @@ socket.on("ai:translated:multiple-messages", (data))
 ### Settings Events
 
 #### Emit (Client → Server)
+
 ```javascript
-socket.emit("settings:translate:languageChange", { authtoken, language })
+socket.emit("settings:translate:languageChange", { authtoken, language });
 // Update user translation language
 
-socket.emit("settings:translate:alwaysTranslateChange", { authtoken, alwaysTranslate })
+socket.emit("settings:translate:alwaysTranslateChange", {
+  authtoken,
+  alwaysTranslate,
+});
 // Update auto-translate preference
 
-socket.emit("settings:summarization:formatChange", { authtoken, format })
+socket.emit("settings:summarization:formatChange", { authtoken, format });
 // Update summarization format
 ```
 
@@ -436,6 +519,7 @@ All APIs use JWT authentication via `authtoken` header.
 ### Authentication Endpoints
 
 #### Sign Up
+
 ```
 POST /api/auth/signup
 Content-Type: multipart/form-data
@@ -457,6 +541,7 @@ Response:
 ```
 
 #### Sign In
+
 ```
 POST /api/auth/signin
 Content-Type: application/x-www-form-urlencoded
@@ -480,6 +565,7 @@ Response:
 ```
 
 #### Get User (Auto-login)
+
 ```
 POST /api/auth/getuser
 Headers:
@@ -495,6 +581,7 @@ Response:
 ### Chat Endpoints
 
 #### Get Friends & Messages
+
 ```
 GET /api/chat/getFriends
 Headers:
@@ -513,6 +600,7 @@ Response:
 ```
 
 #### Get All Chats
+
 ```
 GET /api/chat/
 Headers:
@@ -526,6 +614,7 @@ Response:
 ```
 
 ### Base URL
+
 ```
 VITE_API_SERVER_URL = http://localhost:5000 (development)
 ```
@@ -537,6 +626,7 @@ VITE_API_SERVER_URL = http://localhost:5000 (development)
 The backend uses a NoSQL database (implied MongoDB structure from code). Key collections:
 
 ### Users Collection
+
 ```javascript
 {
   _id: ObjectId,
@@ -562,6 +652,7 @@ The backend uses a NoSQL database (implied MongoDB structure from code). Key col
 ```
 
 ### Messages Collection
+
 ```javascript
 {
   _id: ObjectId,
@@ -578,6 +669,7 @@ The backend uses a NoSQL database (implied MongoDB structure from code). Key col
 ```
 
 ### Friends Collection
+
 ```javascript
 {
   _id: ObjectId,
@@ -593,6 +685,7 @@ The backend uses a NoSQL database (implied MongoDB structure from code). Key col
 ## 🚀 Setup & Installation
 
 ### Prerequisites
+
 - Node.js 16+ and npm
 - Agora account with App ID (for video calling)
 - Syncfusion license key (for image editor)
@@ -601,23 +694,27 @@ The backend uses a NoSQL database (implied MongoDB structure from code). Key col
 ### Installation Steps
 
 1. **Clone the repository**
+
 ```bash
 git clone https://github.com/Yashwant937363/Gossip_App.git
 cd Gossip_App
 ```
 
 2. **Install dependencies**
+
 ```bash
 npm install
 ```
 
 3. **Configure environment variables**
+
 ```bash
 # Create .env.development file
 cp .env.development .env.local
 ```
 
 Update `.env.development` with your credentials:
+
 ```
 VITE_API_SERVER_URL = http://localhost:5000
 VITE_AGORA_APP_ID = your-agora-app-id
@@ -625,6 +722,7 @@ VITE_EDITOR_LICENSE_KEY = your-syncfusion-license-key
 ```
 
 4. **Start the development server**
+
 ```bash
 npm run dev
 ```
@@ -636,18 +734,21 @@ The application will be available at `http://localhost:5173`
 ## 📦 Available Scripts
 
 ### Development
+
 ```bash
 npm run dev
 # Start Vite dev server with --host flag for network access
 ```
 
 ### Production Build
+
 ```bash
 npm run build
 # Compile React with Vite (output in dist/)
 ```
 
 ### Linting
+
 ```bash
 npm run lint
 # Run ESLint with React plugin
@@ -655,6 +756,7 @@ npm run lint
 ```
 
 ### Preview Built App
+
 ```bash
 npm run preview
 # Preview production build locally
@@ -665,12 +767,15 @@ npm run preview
 ## 🌐 Deployment
 
 ### Current Deployment
+
 The app is deployed on **Render.com**:
+
 - **Live URL**: https://gossip-app-dz7b.onrender.com/
 
 ### Deployment Configuration
 
 The app is configured with a proxy for API calls:
+
 ```json
 "proxy": "http://localhost:5000/"
 ```
@@ -678,6 +783,7 @@ The app is configured with a proxy for API calls:
 ### Build for Production
 
 1. **Build the app**
+
 ```bash
 npm run build
 ```
@@ -695,6 +801,7 @@ npm run build
    - Ensure backend API is accessible from the deployed URL
 
 ### Environment Configuration for Production
+
 Update `VITE_API_SERVER_URL` to your production backend URL before building.
 
 ---
@@ -730,17 +837,20 @@ Theme preferences are stored in browser cookies and persisted across sessions.
 ## 📝 Key Components
 
 ### Chat Flow Components
+
 - **Chat.jsx** - Chat list and navigation
 - **ChatWindow** - Message display and input
 - **ChatContainer** - Scrollable message list
 - **Received.jsx** - Message rendering with translation UI
 
 ### Real-time Features
+
 - **VideoCall.jsx** - Video call UI with Agora integration
 - **ChatBot.jsx** - AI assistant interface
 - **ChatDate.jsx** - Conversation summarization trigger
 
 ### Settings Flow
+
 - **Settings.jsx** - Settings layout
 - **Profile.jsx** - User profile management
 - **Themes.jsx** - Theme customization
@@ -763,6 +873,7 @@ This project is open source and available under the MIT License.
 ## 📞 Support
 
 For issues, feature requests, or questions:
+
 - Open an issue on GitHub
 - Contact the maintainer
 

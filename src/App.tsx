@@ -39,13 +39,16 @@ import ImageViewer from "./Components/Chat/ChatWindow/ImageViewer/ImageViewer";
 import { setWarningMsg } from "./store/slices/UISlice";
 import WarningBar from "./Components/MsgBars/WarningBar";
 import AISettings from "./Components/Settings/AISettings/AISettings";
+import { ServertoClientEvents } from "./types/socket.types";
 
 export default function App() {
   const dispatch = useDispatch<AppDispatch>();
   const { isLogin, authtoken } = useSelector((state: RootState) => state.user);
   const successmsg = useSelector((state: RootState) => state.user.successmsg);
   const errormsg = useSelector((state: RootState) => state.user.errormsg);
-  const warningmsg = useSelector((state: RootState) => state.UIState.warningmsg);
+  const warningmsg = useSelector(
+    (state: RootState) => state.UIState.warningmsg,
+  );
   const themeColor = useSelector((state: RootState) => state.theme.themeColor);
   const themeMode = useSelector((state: RootState) => state.theme.themeMode);
   const colors = useSelector((state: RootState) => state.theme.colors);
@@ -67,44 +70,58 @@ export default function App() {
       dispatch(setOnline(false));
     });
 
-    socket.on("requestfromuser", ({ uid, profile, username }: any) => {
-      dispatch(addRequest({ uid, profile, username }));
-    });
+    socket.on(
+      ServertoClientEvents.RequestFromUser,
+      ({ uid, profile, username }: any) => {
+        dispatch(addRequest({ uid, profile, username }));
+      },
+    );
 
-    socket.on("successmessage", ({ msg, user }: any) => {
+    socket.on(ServertoClientEvents.SuccessMessage, ({ msg, user }: any) => {
       if (msg) dispatch(setSucessMsgUser(msg));
       if (user) dispatch(addFriend(user));
     });
 
-    socket.on("errormessage", (message: string) => {
+    socket.on(ServertoClientEvents.ErrorMessage, (message: string) => {
       dispatch(setErrorMsgUser(message));
     });
 
-    socket.on("friendonline", ({ uid }: { uid: string }) => {
+    socket.on(ServertoClientEvents.FriendOnline, ({ uid }: { uid: string }) => {
       dispatch(setFriendOnline(uid));
       dispatch(setReceivedMessages(uid));
     });
 
-    socket.on("friendoffline", ({ uid }: { uid: string }) => {
-      dispatch(setFriendOffline(uid));
-    });
+    socket.on(
+      ServertoClientEvents.FriendOffline,
+      ({ uid }: { uid: string }) => {
+        dispatch(setFriendOffline(uid));
+      },
+    );
 
-    socket.on("chat:receivemessage", (newChat: any) => {
+    socket.on(ServertoClientEvents.ReceiveMessage, (newChat: any) => {
       dispatch(addChat(newChat));
     });
 
-    socket.on("seenmessages", ({ uid }: { uid: string }) => {
+    socket.on(ServertoClientEvents.SeenMessages, ({ uid }: { uid: string }) => {
       dispatch(setSeenMessages(uid));
     });
 
-    socket.on("call:videocallincoming", ({ fromuid }: { fromuid: string }) => {
-      const currentFriends = store.getState().chat.friends;
-      const caller = currentFriends.find((u) => u.uid === fromuid);
-      videoCallRingingReceiverSide({ fromuid });
-      dispatch(initializeVideoCall({ type: "incomingvideo", caller: caller || { uid: fromuid, username: fromuid } }));
-    });
+    socket.on(
+      ServertoClientEvents.VideoCallIncoming,
+      ({ fromuid }: { fromuid: string }) => {
+        const currentFriends = store.getState().chat.friends;
+        const caller = currentFriends.find((u) => u.uid === fromuid);
+        videoCallRingingReceiverSide({ fromuid });
+        dispatch(
+          initializeVideoCall({
+            type: "incomingvideo",
+            caller: caller || { uid: fromuid, username: fromuid },
+          }),
+        );
+      },
+    );
 
-    socket.on("call:videocallcanceled", () => {
+    socket.on(ServertoClientEvents.VideoCallCanceled, () => {
       dispatch(setErrorMsgUser("Call Ended"));
       dispatch(cancelVideoCall());
     });
@@ -113,15 +130,15 @@ export default function App() {
       socket.off("connect", handleConnect);
       socket.off("disconnect", handleDisconnect);
       socket.off("connect_error");
-      socket.off("requestfromuser");
-      socket.off("successmessage");
-      socket.off("errormessage");
-      socket.off("friendonline");
-      socket.off("friendoffline");
-      socket.off("chat:receivemessage");
-      socket.off("seenmessages");
-      socket.off("call:videocallincoming");
-      socket.off("call:videocallcanceled");
+      socket.off(ServertoClientEvents.RequestFromUser);
+      socket.off(ServertoClientEvents.SuccessMessage);
+      socket.off(ServertoClientEvents.ErrorMessage);
+      socket.off(ServertoClientEvents.FriendOnline);
+      socket.off(ServertoClientEvents.FriendOffline);
+      socket.off(ServertoClientEvents.ReceiveMessage);
+      socket.off(ServertoClientEvents.SeenMessages);
+      socket.off(ServertoClientEvents.VideoCallIncoming);
+      socket.off(ServertoClientEvents.VideoCallCanceled);
     };
   }, [dispatch]);
 
@@ -166,26 +183,41 @@ export default function App() {
     document.documentElement.style.setProperty("--theme-color", themeColor);
     document.documentElement.style.setProperty(
       "--opposite-theme-mode",
-      themeMode === "white" ? "black" : "white"
+      themeMode === "white" ? "black" : "white",
     );
     if (colors?.rgbAccent) {
-      document.documentElement.style.setProperty("--rgb-accent", colors.rgbAccent);
+      document.documentElement.style.setProperty(
+        "--rgb-accent",
+        colors.rgbAccent,
+      );
     }
     if (themeMode === "white") {
       document.documentElement.classList.remove("dark");
       if (colors?.rgbBackground) {
-        document.documentElement.style.setProperty("--rgb-background", colors.rgbBackground);
+        document.documentElement.style.setProperty(
+          "--rgb-background",
+          colors.rgbBackground,
+        );
       }
       if (colors?.rgbText) {
-        document.documentElement.style.setProperty("--rgb-color", colors.rgbText);
+        document.documentElement.style.setProperty(
+          "--rgb-color",
+          colors.rgbText,
+        );
       }
     } else {
       document.documentElement.classList.add("dark");
       if (colors?.rgbText) {
-        document.documentElement.style.setProperty("--rgb-background", colors.rgbText);
+        document.documentElement.style.setProperty(
+          "--rgb-background",
+          colors.rgbText,
+        );
       }
       if (colors?.rgbBackground) {
-        document.documentElement.style.setProperty("--rgb-color", colors.rgbBackground);
+        document.documentElement.style.setProperty(
+          "--rgb-color",
+          colors.rgbBackground,
+        );
       }
     }
   }, [themeColor, themeMode, colors]);

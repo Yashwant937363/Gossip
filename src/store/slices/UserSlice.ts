@@ -1,6 +1,11 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import Cookies from "js-cookie";
-import { apiGetUser, apiSignIn, apiSignUp } from "../../api/client";
+import {
+  apiGetUser,
+  apiSignIn,
+  apiSignUp,
+  getAuthToken,
+} from "../../api/client";
 import { UserSettings } from "../../types";
 
 export interface UserState {
@@ -268,13 +273,16 @@ const userSlice = createSlice({
             },
           };
         }
+        state.authtoken = getAuthToken();
         state.isLogin = true;
       } else {
+        Cookies.remove("authtoken");
         state.errormsg = data?.error || data?.message;
       }
     });
     builder.addCase(getUser.rejected, (state, action: any) => {
       state.isPending = false;
+      Cookies.remove("authtoken");
       state.errormsg = action.error?.message || "Get user error";
     });
   },

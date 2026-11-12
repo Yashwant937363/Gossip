@@ -44,18 +44,18 @@ export default function Home() {
     <div className="w-full text-textColor">
       <header
         ref={heroRef}
-        className="relative flex flex-col justify-center items-center text-center px-4 overflow-hidden min-h-[calc(100vh-45px)]"
+        className="relative flex flex-col justify-center items-center text-center px-4 overflow-hidden h-[calc(100vh-45px)]"
       >
         <HeroBackground heroRef={heroRef} />
-        <h1 className="text-4xl sm:text-6xl font-black tracking-tight mb-4 text-themeColor drop-shadow-md">
+        <h1 className="relative z-10 text-3xl sm:text-5xl font-bold text-oppositeThemeMode mb-2 tracking-normal">
           AI Powered Chat Application
         </h1>
-        <p className="text-lg sm:text-2xl font-light opacity-90 max-w-xl mb-8">
+        <p className="relative z-10 text-sm sm:text-base text-textColor opacity-90 mb-5">
           Engage more naturally and intelligently with next-gen AI features
         </p>
         <button
           onClick={() => navigate("/login")}
-          className="px-8 py-3.5 rounded-xl font-bold text-base sm:text-lg bg-themeColor text-themeMode shadow-lg hover:shadow-[0_0_20px_var(--theme-color)] hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer"
+          className="relative z-10 px-5 py-2 rounded-[5px] font-bold text-sm sm:text-base bg-bgHover text-oppositeThemeMode hover:shadow-[0_1px_2px_var(--opposite-theme-mode)] transition-all duration-300 cursor-pointer"
         >
           Get Started
         </button>
@@ -72,8 +72,12 @@ export default function Home() {
               className="p-6 rounded-2xl bg-bg10/60 border border-bg20 shadow-md hover:border-themeColor/60 hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
             >
               <div>
-                <h3 className="text-xl font-bold mb-3 text-themeColor">{item.title}</h3>
-                <p className="text-sm opacity-80 leading-relaxed">{item.description}</p>
+                <h3 className="text-xl font-bold mb-3 text-themeColor">
+                  {item.title}
+                </h3>
+                <p className="text-sm opacity-80 leading-relaxed">
+                  {item.description}
+                </p>
               </div>
             </div>
           ))}
