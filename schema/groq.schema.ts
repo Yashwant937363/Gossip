@@ -10,28 +10,32 @@ export const imageAnalysisSchema = z.object({
   mood: z.string().default(""),
 });
 
-export type ImageAnalysisSchemaType = z.infer<typeof imageAnalysisSchema>;
+export type ImageAnalysisResult = z.infer<typeof imageAnalysisSchema>;
 
 // ========================
 // 2. Translation Schema (Unified)
 // ========================
+
 export const translatedMessageItemSchema = z.object({
   id: z.string(),
   translatedText: z.string(),
 });
+
+export type TranslatedMessageItem = z.infer<typeof translatedMessageItemSchema>;
 
 export const translateMessagesResponseSchema = z.object({
   messages: z.array(translatedMessageItemSchema),
   language: z.string(),
 });
 
-export type TranslateMessagesResponseSchemaType = z.infer<
+export type TranslateMessagesResult = z.infer<
   typeof translateMessagesResponseSchema
 >;
 
 // ========================
 // 3. Summarization Schemas
 // ========================
+
 export const bulletSummarySchema = z.object({
   summary: z.array(z.string()),
 });
@@ -48,8 +52,11 @@ export const structuredSummarySchema = z.object({
   }),
 });
 
-export type BulletSummarySchemaType = z.infer<typeof bulletSummarySchema>;
-export type ParagraphSummarySchemaType = z.infer<typeof paragraphSummarySchema>;
-export type StructuredSummarySchemaType = z.infer<
-  typeof structuredSummarySchema
->;
+export type BulletSummaryResult = z.infer<typeof bulletSummarySchema>;
+export type ParagraphSummaryResult = z.infer<typeof paragraphSummarySchema>;
+export type StructuredSummaryResult = z.infer<typeof structuredSummarySchema>;
+
+export type SummarizationResult =
+  | BulletSummaryResult
+  | ParagraphSummaryResult
+  | StructuredSummaryResult;

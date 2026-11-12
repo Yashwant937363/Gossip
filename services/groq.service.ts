@@ -20,19 +20,21 @@ import {
   paragraphSummarySchema,
   structuredSummarySchema,
   translateMessagesResponseSchema,
+  TranslateMessagesResult,
+  ImageAnalysisResult,
+  SummarizationResult,
 } from "../schema/groq.schema.js";
 import type {
   AnalyzeImageInput,
   ChatbotInput,
   ChatbotResult,
-  ImageAnalysisResult,
-  SummarizationFormat,
-  SummarizationInput,
-  SummarizationResult,
   Tone,
   TranslateMessagesInput,
-  TranslateMessagesResult,
+  SummarizationFormat,
+  SummarizationInput,
 } from "../types/groq.types.js";
+import { safeParseJson } from "../utils/safe-parse-json.js";
+import { validateImageUrl } from "../utils/validate-image-url.js";
 
 /**
  * Type definition for Groq chat completion runner.
@@ -53,26 +55,6 @@ export async function executeGroqChat(
 }
 
 /**
- * Helper to safely parse JSON from model responses, stripping markdown code fences if present.
- */
-export function safeParseJson(content: string | null | undefined): any {
-  if (!content) {
-    throw new Error("Empty response received from Groq AI model");
-  }
-  try {
-    return JSON.parse(content);
-  } catch (error) {
-    // If wrapped in markdown code blocks, strip them
-    const cleaned = content
-      .replace(/^```json\s*/i, "")
-      .replace(/^```\s*/i, "")
-      .replace(/```$/i, "")
-      .trim();
-    return JSON.parse(cleaned);
-  }
-}
-
-/**
  * 1. Image Analysis using Qwen 3.8 Multimodal Vision
  * Model: qwen/qwen3.8-27b
  */
@@ -80,6 +62,8 @@ export async function analyzeImage(
   input: AnalyzeImageInput,
   runner: GroqRunner = executeGroqChat,
 ): Promise<ImageAnalysisResult> {
+  await validateImageUrl(input.url);
+
   const userContent: Array<
     | { type: "text"; text: string }
     | { type: "image_url"; image_url: { url: string } }
@@ -128,8 +112,7 @@ export async function generateChatbotReply(
   runner: GroqRunner = executeGroqChat,
 ): Promise<ChatbotResult> {
   const selectedTone: Tone = input.tone || "normal";
-  const toneInstruction =
-    tone_templates[selectedTone] || tone_templates.normal;
+  const toneInstruction = tone_templates[selectedTone] || tone_templates.normal;
 
   const systemContent = `${human_behavior_message}\n\nTone instruction: ${toneInstruction}`;
 
