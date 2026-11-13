@@ -1,0 +1,10 @@
+{
+  "name": "gossip-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "Gossip_App",
+    "Gossip_Backend",
+    "packages/*"
+  ]
+}
