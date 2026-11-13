@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --first: #f8e559;
+  --second: hsl(273, 100%, 76%);
+  --third: hsl(273, 100%, 70%);
+  --fourth: hsl(264, 96%, 63%);
+  --fifth: hsl(264, 62%, 52%);
+  --sixth: hsl(263, 70%, 42%);
+  --error: #ff4040;
+  --blackshadow: #000;
+
+  --opposite-theme-mode: white;
+  --theme-color: aqua;
+  --theme-mode: black;
+  --text-color: color-mix(in srgb, grey 23%, var(--opposite-theme-mode));
+  --body-text-color: black;
+  --background5: color-mix(in srgb, var(--opposite-theme-mode) 5%, var(--theme-mode));
+  --background10: color-mix(in srgb, var(--opposite-theme-mode) 10%, var(--theme-mode));
+  --background15: color-mix(in srgb, var(--opposite-theme-mode) 15%, var(--theme-mode));
+  --background20: color-mix(in srgb, var(--opposite-theme-mode) 20%, var(--theme-mode));
+  --background30: color-mix(in srgb, var(--opposite-theme-mode) 30%, var(--theme-mode));
+  --backgroundHover: color-mix(in srgb, var(--theme-mode) 30%, var(--theme-color));
+}
+
+@layer base {
+  body {
+    color: var(--text-color);
+    background-color: color-mix(in srgb, grey 5%, var(--theme-mode));
+    min-height: 100vh;
+  }
+}
+
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
