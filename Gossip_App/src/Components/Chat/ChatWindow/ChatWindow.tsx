@@ -21,7 +21,9 @@ import { RootState, AppDispatch } from "../../../store/store";
 export default function ChatWindow() {
   const dispatch = useDispatch<AppDispatch>();
   const fromuid = useSelector((state: RootState) => state.user.uid);
-  const openedchat = useSelector((state: RootState) => state.UIState.openedchat);
+  const openedchat = useSelector(
+    (state: RootState) => state.UIState.openedchat,
+  );
   const chats = useSelector((state: RootState) => state.chat.chats);
   const friends = useSelector((state: RootState) => state.chat.friends);
   const navigate = useNavigate();
@@ -31,7 +33,6 @@ export default function ChatWindow() {
     if (!message || message.trim() === "" || !openedchat?.uid) return;
     const touid = openedchat.uid;
     await sendMessage({
-      fromuid,
       touid,
       message,
       dispatch,
@@ -59,7 +60,7 @@ export default function ChatWindow() {
     }
 
     if (fromuid && uid) {
-      seenMessages({ fromuid: uid, touid: fromuid });
+      seenMessages({ fromuid: uid });
     }
 
     return () => {
@@ -71,10 +72,10 @@ export default function ChatWindow() {
     if (chats.length > 0 && fromuid && uid) {
       const lastIncoming = [...chats]
         .reverse()
-        .find((m) => m.Receiver_ID === fromuid && m.Sender_ID === uid);
+        .find((m) => m.receiverUid === fromuid && m.senderUid === uid);
 
       if (lastIncoming && !lastIncoming.seen) {
-        seenMessages({ fromuid: uid, touid: fromuid });
+        seenMessages({ fromuid: uid });
         dispatch(setSeenMessages(fromuid));
       }
     }

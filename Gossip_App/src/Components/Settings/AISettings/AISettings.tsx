@@ -9,7 +9,11 @@ import {
 import { socket } from "../../../socket/main";
 import { useNavigate } from "react-router-dom";
 import { RootState, AppDispatch } from "../../../store/store";
-import { ClientToServerEvents } from "../../../types/socket.types";
+import {
+  ClientToServerEvents,
+  SUMMARIZATION_FORMATS,
+  SummarizationFormat,
+} from "@gossip/shared";
 
 export default function AISettings() {
   const dispatch = useDispatch<AppDispatch>();
@@ -32,11 +36,10 @@ export default function AISettings() {
     { label: "French", value: "french" },
   ];
 
-  const formatOptions = [
-    { label: "Paragraph", value: "paragraph" },
-    { label: "Bullet Points", value: "bullet" },
-    { label: "Structured", value: "structured" },
-  ];
+  const formatOptions = SUMMARIZATION_FORMATS.map((value) => ({
+    label: value.charAt(0).toUpperCase() + value.slice(1),
+    value,
+  }));
 
   const handleLanguageChange = (newLang: string) => {
     dispatch(changeLanguage(newLang));
@@ -50,7 +53,7 @@ export default function AISettings() {
     });
   };
 
-  const handleFormatChange = (newFormat: string) => {
+  const handleFormatChange = (newFormat: SummarizationFormat) => {
     dispatch(changeSummarizationFormat(newFormat));
     socket.emit(ClientToServerEvents.ChangeSummarizationFormat, {
       format: newFormat,

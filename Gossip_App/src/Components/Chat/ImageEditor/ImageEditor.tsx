@@ -37,7 +37,7 @@ export default function ImageEditor() {
       ctx.putImageData(imageData, 0, 0);
 
       const blob = await new Promise<Blob | null>((resolve) =>
-        canvas.toBlob((b) => resolve(b), "image/png")
+        canvas.toBlob((b) => resolve(b), "image/png"),
       );
 
       if (!blob) {
@@ -50,7 +50,6 @@ export default function ImageEditor() {
       // Step 2: Send URL over socket with type: "image"
       if (uploadRes?.url) {
         await sendMessage({
-          fromuid,
           touid: uid,
           message: uploadRes.url,
           dispatch,

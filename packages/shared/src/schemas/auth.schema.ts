@@ -1,68 +1,33 @@
 import { z } from "zod";
-import { userSettingsSchema } from "./settings.schema";
-import type { UserSettings } from "./settings.schema";
+import { baseUserSchema, publicUserSchema } from "./user.schema";
 
-export const signupReqSchema = z.object({
-  username: z.string().trim().min(1).max(50),
-  email: z.string().email(),
-  password: z.string().min(8),
-  dob: z.coerce.date().optional(),
-  fullname: z.object({
-    firstname: z.string().trim().min(1).max(50),
-    lastname: z.string().trim().min(1).max(50),
-  }),
-});
+export const signupReqSchema = baseUserSchema.extend({ password: z.string() });
 
 export type SignupReq = z.infer<typeof signupReqSchema>;
 
-export const signinReqSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
+export const signupResponseSchema = z.object({
+  authtoken: z.string(),
+  uid: z.string(),
 });
+export type SignupResponse = z.infer<typeof signupResponseSchema>;
 
+export const signinReqSchema = baseUserSchema.pick({ email: true }).extend({
+  password: z.string().min(1, "Password is required"),
+});
 export type SigninReq = z.infer<typeof signinReqSchema>;
 
-export const sendEmailOtpReqSchema = z.object({
-  email: z.string().email(),
+export const signinResponseSchema = publicUserSchema.extend({
+  authtoken: z.string(),
+  msg: z.string(),
 });
+export type SigninResponse = z.infer<typeof signinResponseSchema>;
 
+export const sendEmailOtpReqSchema = baseUserSchema.pick({ email: true });
 export type SendEmailOtpReq = z.infer<typeof sendEmailOtpReqSchema>;
 
-export interface UserProfile {
-  profile: string;
-  username: string;
-  firstname: string;
-  lastname: string;
-  email: string;
-  uid: string;
-  dob?: string;
-  settings: UserSettings;
-}
+export const getUserResponseSchema = z.object({
+  msg: z.string(),
+  user: publicUserSchema,
+});
 
-export interface SigninResponse {
-  authtoken: string;
-  msg: string;
-  profile: string;
-  username: string;
-  fullname: {
-    firstname: string;
-    lastname: string;
-  };
-  uid: string;
-  dob?: string;
-  settings: UserSettings;
-}
-
-export interface GetUserResponse {
-  msg: string;
-  user: UserProfile;
-}
-
-export interface SignupResponse {
-  authtoken: string;
-  uid: string;
-}
-
-export interface JWTPayload {
-  id: string;
-}
+export type GetUserResponse = z.infer<typeof getUserResponseSchema>;

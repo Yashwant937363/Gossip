@@ -1,10 +1,6 @@
+import { IChat, ITranslatedChat, MessageFormat } from "@gossip/shared";
 import mongoose, { Schema } from "mongoose";
 import { HydratedDocument } from "mongoose";
-
-export interface ITranslatedChat {
-  language: string;
-  translatedText: string;
-}
 
 const translatedChatSchema = new Schema<ITranslatedChat>(
   {
@@ -20,32 +16,15 @@ const translatedChatSchema = new Schema<ITranslatedChat>(
   { _id: false },
 );
 
-export interface IChat {
-  Sender_ID: string;
-  Receiver_ID: string;
-  text: string;
-  seen: boolean | null;
-  type: string;
-  translatedText: ITranslatedChat[];
-}
-
-export const SeenChat = {
-  Seen: true,
-  Received: false,
-  Sent: null,
-} as const;
-
-export type SeenChatType = (typeof SeenChat)[keyof typeof SeenChat];
-
 const chatSchema = new Schema<IChat>(
   {
-    Sender_ID: {
+    senderUid: {
       type: String,
       ref: "User",
       required: true,
       index: true,
     },
-    Receiver_ID: {
+    receiverUid: {
       type: String,
       ref: "User",
       required: true,
@@ -61,6 +40,7 @@ const chatSchema = new Schema<IChat>(
     },
     type: {
       type: String,
+      enum: Object.values(MessageFormat),
       required: true,
     },
     translatedText: {

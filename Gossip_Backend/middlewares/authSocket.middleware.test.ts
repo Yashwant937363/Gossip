@@ -11,7 +11,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import * as jwtService from "../services/jwt.service.js";
 import User from "../models/user.model.js";
-import type { JWTPayload } from "../schema/auth.schema.js";
+import type { JWTPayload } from "../types/auth.types.js";
 import { authSocket } from "./authSocket.middleware.js";
 
 describe("authSocket", () => {
@@ -22,8 +22,8 @@ describe("authSocket", () => {
   const user: any = {
     _id: "some-id",
     uid: "abcde",
-    ProfilePicture: "fake-profile-pic-url",
-    Username: "testuser",
+    profile: "fake-profile-pic-url",
+    username: "testuser",
     settings: {},
   };
 
@@ -62,9 +62,9 @@ describe("authSocket", () => {
     expect(socket.data.id).toBe("some-id");
     expect(socket.data.uid).toBe("abcde");
     expect(socket.data.user).toEqual({
-      connected: true,
-      profile: user.ProfilePicture,
-      username: user.Username,
+      online: true,
+      profile: user.profile,
+      username: user.username,
       settings: user.settings,
       uid: user.uid,
     });

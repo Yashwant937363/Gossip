@@ -1,17 +1,19 @@
 import React, { useState } from "react";
 import { ChevronCompactUp, X } from "react-bootstrap-icons";
 import { useLocation, useNavigate } from "react-router-dom";
-import { getImageDescription } from "../../../../socket/ai";
 import { motion } from "motion/react";
 import ImageAnalysis from "./ImageAnalysis";
-import { ImageAnalysisResult } from "../../../../types";
+import { ImageAnalysisResult } from "@gossip/shared";
+import { apiAnalyzeImage } from "../../../../api/client";
 
 export default function ImageViewer() {
   const location = useLocation();
   const navigate = useNavigate();
   const { message } = (location.state as { message?: string }) || {};
   const [isDrawerOpen, setDrawerOpen] = useState(false);
-  const [description, setDescription] = useState<ImageAnalysisResult | null>(null);
+  const [description, setDescription] = useState<ImageAnalysisResult | null>(
+    null,
+  );
   const [isPending, setPending] = useState(false);
 
   const closeImage = () => {
@@ -22,7 +24,7 @@ export default function ImageViewer() {
     if (!message) return;
     setPending(true);
     try {
-      const response = await getImageDescription({ url: message });
+      const response = await apiAnalyzeImage({ url: message });
       setDescription(response);
     } catch (err) {
       console.error("Image analysis failed:", err);
@@ -90,7 +92,9 @@ export default function ImageViewer() {
               ) : isPending ? (
                 <div className="py-6 flex flex-col items-center justify-center text-center gap-2 text-textColor opacity-70">
                   <div className="w-6 h-6 border-2 border-themeColor border-t-transparent rounded-full animate-spin" />
-                  <span className="text-xs">Analyzing image with AI Vision model...</span>
+                  <span className="text-xs">
+                    Analyzing image with AI Vision model...
+                  </span>
                 </div>
               ) : (
                 <div className="py-4 text-center text-xs opacity-60">

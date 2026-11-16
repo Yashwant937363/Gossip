@@ -9,7 +9,7 @@ import userRouter from "./routes/user.routes.js";
 
 const app = express();
 
-app.use(pinoHttp.default({ logger, redact: ["req.headers.authorization"] }));
+app.use(pinoHttp({ logger, redact: ["req.headers.authorization"] }));
 
 app.use(express.json());
 app.use(cors());

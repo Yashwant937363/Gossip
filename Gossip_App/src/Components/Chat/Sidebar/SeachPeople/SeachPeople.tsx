@@ -2,10 +2,11 @@ import React, { useEffect, useState } from "react";
 import SeachItem from "./SeachItem";
 import { useSelector } from "react-redux";
 import RequestItem from "./RequestItem";
-import { findusers } from "../../../../socket/main";
 import { apiSearchUsers } from "../../../../api/client";
 import { RootState } from "../../../../store/store";
 import { motion, AnimatePresence } from "motion/react";
+import { getApiErrorMessage } from "../../../../api/api-error";
+import { notify } from "../../../../utils/notify";
 
 // Variants for staggered entrance
 const containerVariants = {
@@ -72,7 +73,8 @@ export default function SeachPeople() {
           setUsers([]);
         }
       } catch (error) {
-        console.error("Search error:", error);
+        const message = getApiErrorMessage(error, "Failed to fetch users");
+        notify.error("Search error:", message);
         setUsers([]);
       }
     }, 500);

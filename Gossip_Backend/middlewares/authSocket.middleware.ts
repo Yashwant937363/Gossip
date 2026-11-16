@@ -1,6 +1,6 @@
 import type { Socket } from "socket.io";
 import { findUserById } from "../repository/user.repository.js";
-import type { JWTPayload } from "../schema/auth.schema.js";
+import type { JWTPayload } from "../types/auth.types.js";
 import { verifyToken } from "../services/jwt.service.js";
 import type { SocketData } from "../types/socket.types.js";
 
@@ -36,9 +36,9 @@ export async function authSocket(
     socket.data.id = user._id.toString();
     socket.data.uid = user.uid;
     socket.data.user = {
-      connected: true,
-      profile: user.ProfilePicture,
-      username: user.Username,
+      online: true,
+      profile: user.profile,
+      username: user.username,
       settings: user.settings,
       uid: user.uid,
     };

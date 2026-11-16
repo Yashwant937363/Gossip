@@ -6,18 +6,22 @@ import {
   apiSignUp,
   getAuthToken,
 } from "../../api/client";
-import { UserSettings } from "../../types";
+import {
+  APIError,
+  GetUserResponse,
+  SigninReq,
+  SigninResponse,
+  SignupResponse,
+  SummarizationFormat,
+  UserSettings,
+} from "@gossip/shared";
 import { notify } from "../../utils/notify";
+import axios from "axios";
+import { getApiErrorMessage } from "../../api/api-error";
+import { BaseUser, IPublicUser } from "@gossip/shared/schemas/user.schema";
 
-export interface UserState {
-  profile: string | null;
-  fullname: { firstname: string; lastname: string } | null;
-  username: string;
-  email: string;
-  dob: string | null;
+export interface UserState extends IPublicUser {
   authtoken: string;
-  uid: string;
-  settings: UserSettings;
   online: boolean;
   isLogin: boolean;
   isPending: boolean;
@@ -26,10 +30,10 @@ export interface UserState {
 
 const initialState: UserState = {
   profile: "",
-  fullname: null,
+  firstname: null,
+  lastname: null,
   username: "",
   email: "",
-  dob: null,
   authtoken: "",
   uid: "",
   settings: {
@@ -47,70 +51,67 @@ const initialState: UserState = {
   requests: [],
 };
 
-export const signUpUser = createAsyncThunk(
-  "user/signupuser",
-  async ({ signUpData }: { signUpData: FormData }, { dispatch }) => {
-    try {
-      const data = await apiSignUp(signUpData);
-      if (data?.data?.authtoken) {
-        Cookies.set("authtoken", data.data.authtoken, { expires: 365 });
-        dispatch(getUser({ authtoken: data.data.authtoken }));
-        notify.success("Sign Up Successful", "Welcome to Gossip!");
-      }
-      return { data, status: 200 };
-    } catch (error: any) {
-      console.log("SignUP Error: ", error);
-      const errMsg =
-        error.response?.data?.message ||
-        error.response?.data?.error ||
-        error.message ||
-        "Sign up failed";
-      notify.error("Sign Up Failed", errMsg);
-      return { data: { error: errMsg }, status: error.response?.status || 500 };
-    }
-  },
-);
+export const signUpUser = createAsyncThunk<
+  SignupResponse,
+  { signUpData: FormData },
+  { rejectValue: APIError }
+>("user/signupuser", async ({ signUpData }, { rejectWithValue }) => {
+  try {
+    const data = await apiSignUp(signUpData);
+    Cookies.set("authtoken", data.authtoken, { expires: 365 });
+    notify.success("Sign Up Successful", "Welcome to Gossip!");
 
-export const signInUser = createAsyncThunk(
-  "user/signinuser",
-  async ({ signInData }: { signInData: any }, { dispatch }) => {
-    try {
-      const data = await apiSignIn(signInData);
-      if (data?.data?.authtoken) {
-        Cookies.set("authtoken", data.data.authtoken, { expires: 365 });
-        dispatch(getUser({ authtoken: data.data.authtoken }));
-        notify.success("Signed In", "Welcome back!");
-      }
-      return { data, status: 200 };
-    } catch (error: any) {
-      console.log("SignIn Error: ", error);
-      const errMsg =
-        error.response?.data?.message ||
-        error.response?.data?.error ||
-        error.message ||
-        "Sign in failed";
-      notify.error("Sign In Failed", errMsg);
-      return { data: { error: errMsg }, status: error.response?.status || 500 };
-    }
-  },
-);
+    return data;
+  } catch (error: any) {
+    const message = getApiErrorMessage(
+      error,
+      "Failed to signup, Try again after some time",
+    );
 
-export const getUser = createAsyncThunk(
-  "user/getuser",
-  async ({ authtoken }: { authtoken: string }) => {
-    try {
-      const data = await apiGetUser(authtoken);
-      return { data, status: 200 };
-    } catch (error: any) {
-      console.log("GetUser Error: ", error);
-      const errMsg =
-        error.response?.data?.message ||
-        error.response?.data?.error ||
-        error.message;
-      return { data: { error: errMsg }, status: error.response?.status || 500 };
-    }
-  },
-);
+    notify.error("Sign Up", message);
+
+    return rejectWithValue({ error: message });
+  }
+});
+
+export const signInUser = createAsyncThunk<
+  SigninResponse,
+  { signInData: SigninReq },
+  { rejectValue: APIError }
+>("user/signinuser", async ({ signInData }, { rejectWithValue }) => {
+  try {
+    const data = await apiSignIn(signInData);
+    Cookies.set("authtoken", data.authtoken, { expires: 365 });
+    notify.success("Signed In", "Welcome back!");
+    return data;
+  } catch (error: any) {
+    const message = getApiErrorMessage(
+      error,
+      "Failed to signin, Try again after some time",
+    );
+
+    notify.error("Sign In", message);
+
+    return rejectWithValue({ error: message });
+  }
+});
+
+export const getUser = createAsyncThunk<
+  GetUserResponse,
+  { authtoken: string },
+  { rejectValue: APIError }
+>("user/getuser", async ({ authtoken }, { rejectWithValue }) => {
+  try {
+    const data = await apiGetUser(authtoken);
+    return data;
+  } catch (error: any) {
+    const message = getApiErrorMessage(error);
+
+    notify.error("Auto Login", message);
+
+    return rejectWithValue({ error: message });
+  }
+});
 
 const userSlice = createSlice({
   name: "user",
@@ -118,10 +119,10 @@ const userSlice = createSlice({
   reducers: {
     clear: (state) => {
       state.profile = null;
-      state.fullname = null;
+      state.firstname = null;
+      state.lastname = null;
       state.username = "";
       state.email = "";
-      state.dob = null;
       state.authtoken = "";
       state.uid = "";
       state.online = false;
@@ -130,19 +131,15 @@ const userSlice = createSlice({
     },
     setSignUpDetails: (
       state,
-      action: PayloadAction<{
-        fullname: any;
-        username: string;
-        email: string;
-        date: string;
-        profile?: string | null;
-      }>,
+      action: PayloadAction<Omit<BaseUser, "settings">>,
     ) => {
-      const { fullname, username, email, date } = action.payload;
-      state.fullname = fullname;
+      const { firstname, lastname, username, email, profile } = action.payload;
+      state.firstname = firstname;
+      state.lastname = lastname;
       state.username = username;
+
       state.email = email;
-      state.dob = date;
+      state.profile = profile;
     },
     setSignInDetails: (state, action: PayloadAction<string>) => {
       state.email = action.payload;
@@ -165,7 +162,10 @@ const userSlice = createSlice({
     changeAlwaysTranslate: (state, action: PayloadAction<boolean>) => {
       state.settings.translation.alwaysTranslate = action.payload;
     },
-    changeSummarizationFormat: (state, action: PayloadAction<string>) => {
+    changeSummarizationFormat: (
+      state,
+      action: PayloadAction<SummarizationFormat>,
+    ) => {
       state.settings.summarization.format = action.payload;
     },
     addRequest: (state, action: PayloadAction<any>) => {
@@ -190,15 +190,10 @@ const userSlice = createSlice({
     });
     builder.addCase(signUpUser.fulfilled, (state, action) => {
       state.isPending = false;
-      const { data, status } = action.payload;
-      if (status >= 200 && status < 300 && data?.data?.authtoken) {
-        state.authtoken = data.data.authtoken;
-        Cookies.set("authtoken", action.payload.data.authtoken, {
-          expires: 365,
-        });
-        state.uid = data.user_id || state.uid;
-        state.isLogin = true;
-      }
+      const data = action.payload;
+      state.authtoken = data.authtoken;
+      state.uid = data.uid;
+      state.isLogin = true;
     });
     builder.addCase(signUpUser.rejected, (state) => {
       state.isPending = false;
@@ -209,19 +204,8 @@ const userSlice = createSlice({
       state.isPending = true;
     });
     builder.addCase(signInUser.fulfilled, (state, action) => {
-      if (action.payload.status < 300 && action.payload.status >= 200) {
-        const { profile, authtoken, dob, fullname, uid, username, settings } =
-          action.payload.data;
-        state.profile = profile;
-        state.authtoken = authtoken;
-        Cookies.set("authtoken", authtoken, { expires: 365 });
-        state.dob = dob;
-        state.fullname = fullname;
-        state.username = username;
-        state.uid = uid;
-        state.settings = settings;
-        state.isLogin = true;
-      }
+      Object.assign(state, action.payload);
+      state.isLogin = true;
       state.isPending = false;
     });
     builder.addCase(signInUser.rejected, (state) => {
@@ -234,38 +218,10 @@ const userSlice = createSlice({
     });
     builder.addCase(getUser.fulfilled, (state, action) => {
       state.isPending = false;
-      const { data, status } = action.payload;
-      if (status >= 200 && status < 300 && data) {
-        const user = data.user || data;
-        state.username = user.Username || user.username || state.username;
-        state.email = user.Email || user.email || state.email;
-        state.uid = user.uid || user._id || state.uid;
-        state.profile = user.ProfilePicture || user.profile || state.profile;
-        if (user.firstname || user.lastname) {
-          state.fullname = {
-            firstname: user.firstname || "",
-            lastname: user.lastname || "",
-          };
-        }
-        if (user.dob) {
-          state.dob = user.dob;
-        }
-        if (user.settings) {
-          state.settings = {
-            translation: {
-              language: user.settings.translation?.language || "original",
-              alwaysTranslate: !!user.settings.translation?.alwaysTranslate,
-            },
-            summarization: {
-              format: user.settings.summarization?.format || "paragraph",
-            },
-          };
-        }
-        state.authtoken = getAuthToken();
-        state.isLogin = true;
-      } else {
-        Cookies.remove("authtoken");
-      }
+
+      Object.assign(state, action.payload.user);
+      state.authtoken = getAuthToken();
+      state.isLogin = true;
     });
     builder.addCase(getUser.rejected, (state) => {
       state.isPending = false;

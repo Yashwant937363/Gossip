@@ -6,5 +6,12 @@
     "Gossip_App",
     "Gossip_Backend",
     "packages/*"
-  ]
+  ],
+  "scripts": {
+    "install:frontend": "npm install --workspace=Gossip_App",
+    "install:backend": "npm install --workspace=Gossip_Backend",
+    "build:frontend": "npm run build --workspace=Gossip_App",
+    "build:backend": "npm run build --workspace=Gossip_Backend",
+    "start:backend": "npm run start --workspace=Gossip_Backend"
+  }
 }

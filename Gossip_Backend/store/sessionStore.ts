@@ -1,28 +1,16 @@
 import {
   SummarizationSettings,
   TranslationSettings,
+  UserSession,
   UserSettings,
-} from "../schema/settings.schema.js";
-
-export interface UserSession {
-  uid: string;
-  profile: string;
-  username: string;
-  settings: UserSettings;
-  connected: boolean;
-}
-
-export interface UserSearchResult {
-  uid: string;
-  profile: string;
-  username: string;
-}
+} from "@gossip/shared";
+import { SearchUserItem } from "@gossip/shared/schemas/user.schema";
 
 // Abstract class
 export abstract class UserStore {
   abstract getUser(uid: string): UserSession | undefined;
 
-  abstract findUser(uid: string, socketuid: string): UserSearchResult[];
+  abstract findUser(uid: string, socketuid: string): SearchUserItem[];
 
   abstract saveUser(uid: string, session: UserSession): void;
 
@@ -44,7 +32,7 @@ export abstract class UserStore {
 export class ServerUserStore extends UserStore {
   private users = new Map<string, UserSession>();
 
-  findUser(uid: string, socketuid: string): UserSearchResult[] {
+  findUser(uid: string, socketuid: string): SearchUserItem[] {
     const regex = new RegExp(uid.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
 
     return Array.from(this.users.values())

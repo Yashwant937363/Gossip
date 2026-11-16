@@ -1,10 +1,11 @@
 import type { Request, Response } from "express";
 import { searchUsers as searchUsersInDb } from "../repository/user.repository.js";
-import type { JWTPayload } from "../schema/auth.schema.js";
+import type { JWTPayload } from "../types/auth.types.js";
+import { APIError, SearchUsersResponse } from "@gossip/shared";
 
 export const searchUsers = async (
   req: Request,
-  res: Response<any, JWTPayload>,
+  res: Response<SearchUsersResponse | APIError, JWTPayload>,
 ) => {
   try {
     const query = req.query.q as string;

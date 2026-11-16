@@ -6,10 +6,7 @@ import Chat from "./Components/Chat/Chat";
 import NotFound from "./Components/NotFound/NotFound";
 import { useDispatch, useSelector } from "react-redux";
 import Account from "./Components/Account/Account";
-import {
-  addRequest,
-  setOnline,
-} from "./store/slices/UserSlice";
+import { addRequest, setOnline } from "./store/slices/UserSlice";
 import {
   addChat,
   addFriend,
@@ -33,7 +30,7 @@ import { store, RootState, AppDispatch } from "./store/store";
 import { videoCallRingingReceiverSide } from "./socket/call";
 import ImageViewer from "./Components/Chat/ChatWindow/ImageViewer/ImageViewer";
 import AISettings from "./Components/Settings/AISettings/AISettings";
-import { ServertoClientEvents } from "./types/socket.types";
+import { ServertoClientEvents } from "@gossip/shared";
 import { NotificationContainer } from "./Components/Notifications";
 import { notify } from "./utils/notify";
 

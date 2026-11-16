@@ -5,18 +5,13 @@ import {
   findUserById,
 } from "../repository/user.repository.js";
 import { nanoid } from "nanoid";
-import sharp from "sharp";
-import {
-  GetUserResponse,
-  JWTPayload,
-  SigninReq,
-  SignupReq,
-} from "../schema/auth.schema.js";
-import { uploadImage } from "../services/cloudinary.service.js";
+import { SigninReq, SignupReq } from "@gossip/shared";
 import { compareHash, getHash } from "../services/bcrypt.service.js";
 import { generateToken } from "../services/jwt.service.js";
 import { generateEmailOtp, sendEmailOtp } from "../services/email.service.js";
 import { processAndUploadImage } from "../services/image.service.js";
+import { GetUserResponse } from "@gossip/shared";
+import { JWTPayload } from "../types/auth.types.js";
 
 export const getUser = async (
   req: Request,
@@ -27,11 +22,11 @@ export const getUser = async (
     return res.status(200).json({
       msg: "Sussessfully Login",
       user: {
-        profile: user.ProfilePicture,
-        username: user.Username,
-        firstname: user.FirstName,
-        lastname: user.LastName,
-        email: user.Email,
+        profile: user.profile,
+        username: user.username,
+        firstname: user.firstname,
+        lastname: user.lastname,
+        email: user.email,
         uid: user.uid,
         settings: user.settings,
       },
@@ -44,7 +39,7 @@ export const signupUser = async (
   req: Request<{}, {}, SignupReq>,
   res: Response,
 ) => {
-  let url;
+  let url = "";
   try {
     const existingUser = await findUserByEmail(req.body.email);
     if (existingUser) {
@@ -66,12 +61,12 @@ export const signupUser = async (
     const password = await getHash(req.body.password);
 
     const newUser = await createUser({
-      ProfilePicture: req.file ? url : "",
-      Username: req.body.username,
-      FirstName: req.body.fullname.firstname,
-      LastName: req.body.fullname.lastname,
-      Email: req.body.email,
-      Password: password,
+      profile: req.file ? url : "",
+      username: req.body.username,
+      firstname: req.body.firstname,
+      lastname: req.body.lastname,
+      email: req.body.email,
+      password: password,
       uid: nanoid(5),
     });
     const authtoken = generateToken<JWTPayload>({ id: newUser.id });
@@ -89,11 +84,11 @@ export const signinUser = async (
   try {
     const user = await findUserByEmail(req.body.email);
 
+    console.log(req.body.password, user);
     if (!user) {
       return res.status(401).json({ error: "Login with correct Credentials" });
     }
-
-    const passwordCompare = await compareHash(req.body.password, user.Password);
+    const passwordCompare = await compareHash(req.body.password, user.password);
     if (!passwordCompare) {
       return res.status(401).json({ error: "Login with correct Credentials" });
     }
@@ -103,9 +98,9 @@ export const signinUser = async (
     res.status(200).json({
       authtoken,
       msg: "Login Successful",
-      profile: user.ProfilePicture,
-      username: user.Username,
-      fullname: { firstname: user.FirstName, lastname: user.LastName },
+      profile: user.profile,
+      username: user.username,
+      fullname: { firstname: user.firstname, lastname: user.lastname },
       uid: user.uid,
       settings: user.settings,
     });

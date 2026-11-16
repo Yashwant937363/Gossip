@@ -1,24 +1,23 @@
-import type { IChat } from "./chat.types";
-import type { UserSettings } from "../schemas/settings.schema";
+import type { IChat, MessageType } from "./chat.types";
+import type {
+  SummarizationFormat,
+  UserSettings,
+} from "../schemas/settings.schema";
+import { UserPreview } from "../schemas/user.schema";
 
-export interface UserSession {
-  uid: string;
-  profile: string;
-  username: string;
+export type UserSession = UserPreview & {
   settings: UserSettings;
-  connected?: boolean;
-}
+  online?: boolean;
+};
 
 export interface SendMessagePayload {
-  fromuid: string;
   touid: string;
   message: string;
-  type: "text" | "image";
+  type: MessageType;
 }
 
 export interface SeenMessagesPayload {
   fromuid: string;
-  touid: string;
 }
 
 export enum ServertoClientEvents {
@@ -45,11 +44,7 @@ export interface ServerToClientEventsTypes {
   [ServertoClientEvents.FriendOffline]: (data: { uid: string }) => void;
 
   // Friend request events
-  [ServertoClientEvents.RequestFromUser]: (data: {
-    uid: string;
-    profile: string;
-    username: string;
-  }) => void;
+  [ServertoClientEvents.RequestFromUser]: (data: UserPreview) => void;
   [ServertoClientEvents.SuccessMessage]: (data: {
     msg: string;
     user?: any;
@@ -125,9 +120,6 @@ export interface ClientToServerEventsTypes {
     alwaysTranslate: boolean;
   }) => void;
   [ClientToServerEvents.ChangeSummarizationFormat]: (data: {
-    format: "paragraph" | "bullet_points";
+    format: SummarizationFormat;
   }) => void;
 }
-
-export type ClientHandler<E extends keyof ClientToServerEventsTypes> =
-  ClientToServerEventsTypes[E];

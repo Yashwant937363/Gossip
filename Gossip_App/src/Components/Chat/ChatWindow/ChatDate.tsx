@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { motion } from "motion/react";
 import { useSelector } from "react-redux";
-import { summarizeConversation } from "../../../socket/ai";
 import { RootState } from "../../../store/store";
+import { apiSummarize } from "../../../api/client";
 
 interface ChatDateProps {
   date: Date;
@@ -15,7 +15,7 @@ export default function ChatDate({ date, getConversation }: ChatDateProps) {
   const [summary, setSummary] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const { format } = useSelector(
-    (state: RootState) => state.user.settings.summarization
+    (state: RootState) => state.user.settings.summarization,
   );
 
   const handleDoubleClick = async () => {
@@ -26,7 +26,7 @@ export default function ChatDate({ date, getConversation }: ChatDateProps) {
         try {
           const conversation = getConversation(date);
           if (conversation && conversation.length > 0) {
-            const res = await summarizeConversation({
+            const res = await apiSummarize({
               conversation,
               format,
             });
@@ -88,24 +88,30 @@ export default function ChatDate({ date, getConversation }: ChatDateProps) {
                     <li key={idx}>{point}</li>
                   ))}
                 </ul>
-              ) : format === "structured" && typeof summary.summary === "object" ? (
+              ) : format === "structured" &&
+                typeof summary.summary === "object" ? (
                 <div className="space-y-2">
                   <h4 className="font-bold text-center text-themeColor text-sm">
                     {summary.summary.topic}
                   </h4>
                   {summary.summary.keyPoints && (
                     <div>
-                      <span className="font-semibold block mb-1">Key Points:</span>
+                      <span className="font-semibold block mb-1">
+                        Key Points:
+                      </span>
                       <ul className="list-disc list-inside space-y-1">
-                        {summary.summary.keyPoints.map((pt: string, i: number) => (
-                          <li key={i}>{pt}</li>
-                        ))}
+                        {summary.summary.keyPoints.map(
+                          (pt: string, i: number) => (
+                            <li key={i}>{pt}</li>
+                          ),
+                        )}
                       </ul>
                     </div>
                   )}
                   {summary.summary.conclusion && (
                     <p className="mt-2 pt-2 border-t border-bg20 font-medium">
-                      <span className="font-bold">Conclusion:</span> {summary.summary.conclusion}
+                      <span className="font-bold">Conclusion:</span>{" "}
+                      {summary.summary.conclusion}
                     </p>
                   )}
                 </div>
@@ -114,7 +120,9 @@ export default function ChatDate({ date, getConversation }: ChatDateProps) {
               )}
             </div>
           ) : (
-            <div className="text-center opacity-60">No conversation found to summarize for this date.</div>
+            <div className="text-center opacity-60">
+              No conversation found to summarize for this date.
+            </div>
           )}
         </motion.div>
       )}

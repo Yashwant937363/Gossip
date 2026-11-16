@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import type { JWTPayload } from "../schema/auth.schema.js";
+import type { JWTPayload } from "../types/auth.types.js";
 import { verifyToken } from "../services/jwt.service.js";
 
 const authUser = (req: Request, res: Response, next: NextFunction) => {

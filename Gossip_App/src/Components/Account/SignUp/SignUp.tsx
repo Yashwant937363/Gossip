@@ -64,7 +64,10 @@ export default function SignUp({}: SignUpProps) {
       notify.success("OTP Sent", response.message || "OTP sent to your email");
     } catch (err: any) {
       console.error(err);
-      notify.error("OTP Failed", err.response?.data?.message || "Failed to send OTP");
+      notify.error(
+        "OTP Failed",
+        err.response?.data?.message || "Failed to send OTP",
+      );
     } finally {
       setOtpLoading(false);
     }
@@ -110,10 +113,10 @@ export default function SignUp({}: SignUpProps) {
     dispatch(
       setSignUpDetails({
         profile: profile,
-        fullname: { firstname: data.username, lastname: "" },
+        firstname: data.username,
+        lastname: "",
         username: data.username,
         email: data.email,
-        date: new Date().toISOString(),
       }),
     );
     dispatch(signUpUser({ signUpData }));

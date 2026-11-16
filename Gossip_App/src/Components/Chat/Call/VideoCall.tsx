@@ -27,7 +27,7 @@ import { socketCancelVideoCall } from "../../../socket/call";
 import { motion, useAnimate } from "motion/react";
 import VirtualBackgroundExtension from "agora-extension-virtual-background";
 import { RootState, AppDispatch } from "../../../store/store";
-import { ServertoClientEvents } from "../../../types/socket.types";
+import { ServertoClientEvents } from "@gossip/shared";
 
 const virtualBackgrounds = [
   "/virtual_backgrounds/background1.jpg",

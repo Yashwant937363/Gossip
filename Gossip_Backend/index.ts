@@ -6,17 +6,21 @@ import { authSocket } from "./middlewares/authSocket.middleware.js";
 import registerCallHandlers from "./sockets/call.socket.js";
 import registerChatHandlers from "./sockets/chat.socket.js";
 import registerSettingsHandlers from "./sockets/settings.socket.js";
-import registerUserHandlers, { setupUserSession } from "./sockets/user.socket.js";
+import registerUserHandlers, {
+  setupUserSession,
+} from "./sockets/user.socket.js";
 import { UsersStore } from "./store/sessionStore.js";
 import app from "./app.js";
 import type {
-  ClientToServerEventsTypes,
   InterServerEvents,
-  ServerToClientEventsTypes,
   SocketData,
   TypedServer,
   TypedSocket,
 } from "./types/socket.types.js";
+import {
+  ClientToServerEventsTypes,
+  ServerToClientEventsTypes,
+} from "@gossip/shared";
 
 const httpServer = createServer(app);
 

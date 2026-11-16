@@ -1,10 +1,18 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { apiGetFriends } from "../../api/client";
-import { ChatMessage, Friend, TranslatedTextItem } from "../../types";
+import {
+  APIError,
+  Friend,
+  GetFriendsAndChatsResponse,
+  IChat,
+} from "@gossip/shared";
+import { notify } from "../../utils/notify";
+import axios from "axios";
+import { getApiErrorMessage } from "../../api/api-error";
 
 export interface ChatState {
   friends: Friend[];
-  chats: ChatMessage[];
+  chats: IChat[];
   pending: boolean;
 }
 
@@ -14,21 +22,21 @@ const initialState: ChatState = {
   pending: false,
 };
 
-export const fetchFriends = createAsyncThunk(
-  "chat/fetchFriends",
-  async ({ authtoken }: { authtoken?: string }) => {
-    try {
-      const data = await apiGetFriends(authtoken);
-      return { data, status: 200 };
-    } catch (error: any) {
-      console.log("Error while fetching friends: ", error);
-      return {
-        data: { error: error.message },
-        status: error.response?.status || 500,
-      };
-    }
+export const fetchFriends = createAsyncThunk<
+  GetFriendsAndChatsResponse,
+  { authtoken?: string },
+  { rejectValue: APIError }
+>("chat/fetchFriends", async ({ authtoken }, { rejectWithValue }) => {
+  try {
+    return await apiGetFriends(authtoken);
+  } catch (error: unknown) {
+    const message = getApiErrorMessage(error);
+
+    notify.error("Getting Chat Data", message);
+
+    return rejectWithValue({ error: message });
   }
-);
+});
 
 const chatSlice = createSlice({
   name: "chat",
@@ -52,7 +60,7 @@ const chatSlice = createSlice({
         return item;
       });
     },
-    addChat: (state, action: PayloadAction<ChatMessage>) => {
+    addChat: (state, action: PayloadAction<IChat>) => {
       state.chats.push(action.payload);
     },
     addFriend: (state, action: PayloadAction<Friend>) => {
@@ -64,7 +72,7 @@ const chatSlice = createSlice({
     setSeenMessages: (state, action: PayloadAction<string>) => {
       const uid = action.payload;
       state.chats = state.chats.map((item) => {
-        if (item.Receiver_ID === uid) {
+        if (item.receiverUid === uid) {
           return { ...item, seen: true };
         }
         return item;
@@ -73,7 +81,7 @@ const chatSlice = createSlice({
     setReceivedMessages: (state, action: PayloadAction<string>) => {
       const uid = action.payload;
       state.chats = state.chats.map((item) => {
-        if (item.Receiver_ID === uid && item.seen !== true) {
+        if (item.receiverUid === uid && item.seen !== true) {
           return { ...item, seen: false };
         }
         return item;
@@ -84,12 +92,12 @@ const chatSlice = createSlice({
       action: PayloadAction<{
         messages: Array<{ id: string; translatedText: string }>;
         language: string;
-      }>
+      }>,
     ) => {
       const { messages, language } = action.payload;
       state.chats = state.chats.map((chat) => {
         const translatedItem = messages.find(
-          (m) => m.id === chat._id?.toString()
+          (m) => m.id === chat._id?.toString(),
         );
         if (translatedItem) {
           const existingList = chat.translatedText || [];
@@ -111,7 +119,7 @@ const chatSlice = createSlice({
         id: string;
         translatedText: string;
         language: string;
-      }>
+      }>,
     ) => {
       const { id, translatedText, language } = action.payload;
       state.chats = state.chats.map((chat) => {
@@ -139,16 +147,12 @@ const chatSlice = createSlice({
       state.pending = true;
     });
     builder.addCase(fetchFriends.fulfilled, (state, action) => {
-      const { data, status } = action.payload;
-      if (status >= 200 && status < 300 && data) {
-        const { friends = [], chats = [] } = data;
-        state.friends = friends;
-        state.chats = chats;
-      }
+      const data = action.payload;
+      state.friends = data.friends;
+      state.chats = data.chats;
       state.pending = false;
     });
     builder.addCase(fetchFriends.rejected, (state, action) => {
-      console.log(action.payload);
       state.pending = false;
     });
   },
