@@ -1,14 +1,11 @@
 import FriendRequest from "../models/friend-request.model.js";
-import {
-  FriendRequestStatus,
-  type IFriendRequest,
-} from "../types/friend-request.types.js";
+import { FriendRequestStatus } from "@gossip/shared";
 
 export async function findFriendRequestBetween(uidA: string, uidB: string) {
   return await FriendRequest.findOne({
     $or: [
-      { Sender_ID: uidA, Receiver_ID: uidB },
-      { Sender_ID: uidB, Receiver_ID: uidA },
+      { senderUid: uidA, receiverUid: uidB },
+      { senderUid: uidB, receiverUid: uidA },
     ],
   });
 }
@@ -18,8 +15,8 @@ export async function createFriendRequest(
   receiverUid: string,
 ) {
   return await FriendRequest.create({
-    Sender_ID: senderUid,
-    Receiver_ID: receiverUid,
+    senderUid: senderUid,
+    receiverUid: receiverUid,
     status: FriendRequestStatus.PENDING,
   });
 }
@@ -37,7 +34,7 @@ export async function updateFriendRequestStatus(
 
 export async function getPendingRequestsForUser(receiverUid: string) {
   return await FriendRequest.find({
-    Receiver_ID: receiverUid,
+    receiverUid,
     status: FriendRequestStatus.PENDING,
   });
 }

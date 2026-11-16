@@ -10,11 +10,19 @@ import type {
   ChatbotInput,
   SummarizationInput,
   TranslateMessagesInput,
-} from "../types/groq.types.js";
+} from "@gossip/shared";
+import {
+  APIError,
+  ChatbotResult,
+  ImageAnalysisResult,
+  SummarizationResult,
+  TranslateMessagesResult,
+} from "@gossip/shared";
+import { JWTPayload } from "../types/auth.types.js";
 
 export const handleChatbot = async (
   req: Request<{}, {}, ChatbotInput>,
-  res: Response,
+  res: Response<ChatbotResult | APIError, JWTPayload>,
 ) => {
   try {
     const { message, tone, history, sessionId } = req.body;
@@ -41,7 +49,7 @@ export const handleChatbot = async (
 
 export const handleImageAnalyze = async (
   req: Request<{}, {}, AnalyzeImageInput>,
-  res: Response,
+  res: Response<ImageAnalysisResult | APIError, JWTPayload>,
 ) => {
   try {
     const { url, prompt } = req.body;
@@ -51,7 +59,7 @@ export const handleImageAnalyze = async (
     }
 
     const result = await analyzeImage({ url, prompt });
-    return res.status(200).json({ data: result });
+    return res.status(200).json(result);
   } catch (error: any) {
     console.error("AI Image Analyze Error:", error);
     return res
@@ -62,7 +70,7 @@ export const handleImageAnalyze = async (
 
 export const handleTranslate = async (
   req: Request<{}, {}, TranslateMessagesInput>,
-  res: Response,
+  res: Response<TranslateMessagesResult | APIError, JWTPayload>,
 ) => {
   try {
     const { messages, to } = req.body;
@@ -89,7 +97,7 @@ export const handleTranslate = async (
 
 export const handleSummarize = async (
   req: Request<{}, {}, SummarizationInput>,
-  res: Response,
+  res: Response<SummarizationResult | APIError, JWTPayload>,
 ) => {
   try {
     const { conversation, format } = req.body;

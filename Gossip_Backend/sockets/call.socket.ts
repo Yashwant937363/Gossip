@@ -3,10 +3,7 @@ import type {
   TypedServer,
   TypedSocket,
 } from "../types/socket.types.js";
-import {
-  ClientToServerEvents,
-  ServertoClientEvents,
-} from "../types/socket.types.js";
+import { ClientToServerEvents, ServertoClientEvents } from "@gossip/shared";
 
 export default function registerCallHandlers(
   _io: TypedServer,

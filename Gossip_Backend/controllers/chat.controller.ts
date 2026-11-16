@@ -1,18 +1,19 @@
 import type { Request, Response } from "express";
 import fs from "node:fs";
-import { JWTPayload } from "../schema/auth.schema.js";
 import { uploadImage } from "../services/cloudinary.service.js";
 import { UsersStore } from "../store/sessionStore.js";
 import {
+  APIError,
   GetFriendsAndChatsResponse,
   UploadChatImageResponse,
-} from "../schema/chat.schema.js";
+} from "@gossip/shared";
 import {
   findUserById,
   findUsersByUids,
 } from "../repository/user.repository.js";
 import { getFriendUids } from "../repository/friend.repository.js";
 import { getUserChatHistory } from "../repository/chat.repository.js";
+import { JWTPayload } from "../types/auth.types.js";
 
 export const getFriendsandChats = async (
   req: Request,
@@ -21,7 +22,7 @@ export const getFriendsandChats = async (
   try {
     const user = await findUserById(res.locals.id);
     if (!user) {
-      return res.status(404).json({ msg: "User not Found" });
+      return res.status(404).json({ error: "User not Found" });
     }
 
     const uid = user.uid;
@@ -68,8 +69,8 @@ export const getFriendsandChats = async (
       }
       return {
         uid: friendUid,
-        profile: databaseUser.ProfilePicture,
-        username: databaseUser.Username,
+        profile: databaseUser.profile,
+        username: databaseUser.username,
         online: false,
       };
     });
@@ -114,7 +115,7 @@ export const getFriendsandChats = async (
     //   }
     // }
     // console.log("Updated", chats);
-    res.status(200).json({ msg: "ok", friends: newFriends, chats: chats });
+    res.status(200).json({ msg: "ok", friends: newFriends, chats });
   } catch (error) {
     console.log(error);
     return res
@@ -124,8 +125,8 @@ export const getFriendsandChats = async (
 };
 
 export const uploadChatImage = async (
-  req: Request<{}, {}, UploadChatImageResponse>,
-  res: Response<any, JWTPayload>,
+  req: Request,
+  res: Response<UploadChatImageResponse | APIError, JWTPayload>,
 ) => {
   try {
     if (!req.file) {

@@ -1,13 +1,14 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, Robot } from "react-bootstrap-icons";
 import { useDispatch, useSelector } from "react-redux";
 import { addMessage, changeTone } from "../../store/slices/AIChatBotSlice";
 import MessageBar from "../Chat/ChatWindow/MessageBar";
-import { sendChatBotPrompt } from "../../socket/ai";
 import SendChat from "../Chat/ChatWindow/SendChat/SendChat";
 import ReceivedChat from "../Chat/ChatWindow/ReceiveChat/Received";
 import { RootState, AppDispatch } from "../../store/store";
+import { apiChatbot } from "../../api/client";
+import { Tone } from "@gossip/shared";
 
 export default function ChatBot() {
   const dispatch = useDispatch<AppDispatch>();
@@ -37,7 +38,7 @@ export default function ChatBot() {
         content: m.text,
       }));
 
-      const response = await sendChatBotPrompt({
+      const response = await apiChatbot({
         tone,
         message,
         history,
@@ -48,9 +49,10 @@ export default function ChatBot() {
       console.error("Chatbot response error:", err);
       dispatch(
         addMessage({
-          message: "Sorry, I had trouble processing that request. Please try again.",
+          message:
+            "Sorry, I had trouble processing that request. Please try again.",
           ai: true,
-        })
+        }),
       );
     } finally {
       setLoading(false);
@@ -80,8 +82,12 @@ export default function ChatBot() {
             <Robot className="text-xl" />
           </div>
           <div>
-            <h2 className="font-bold text-sm tracking-wide text-themeColor">AI Assistant</h2>
-            <span className="text-[11px] text-emerald-400 font-medium">Online • Groq Powered</span>
+            <h2 className="font-bold text-sm tracking-wide text-themeColor">
+              AI Assistant
+            </h2>
+            <span className="text-[11px] text-emerald-400 font-medium">
+              Online • Groq Powered
+            </span>
           </div>
         </div>
 
@@ -90,7 +96,7 @@ export default function ChatBot() {
           <span className="text-xs opacity-75 hidden sm:inline">Tone:</span>
           <select
             value={tone}
-            onChange={(e) => dispatch(changeTone(e.target.value))}
+            onChange={(e) => dispatch(changeTone(e.target.value as Tone))}
             className="bg-bg15 border border-bg20 rounded-xl px-3 py-1.5 text-xs font-semibold text-textColor focus:outline-none focus:border-themeColor cursor-pointer"
           >
             {tones.map((t) => (
@@ -112,7 +118,8 @@ export default function ChatBot() {
             <Robot className="text-5xl text-themeColor mb-3" />
             <p className="text-base font-semibold">How can I help you today?</p>
             <p className="text-xs max-w-xs mt-1">
-              Ask anything, request recommendations, or change my tone using the dropdown above.
+              Ask anything, request recommendations, or change my tone using the
+              dropdown above.
             </p>
           </div>
         ) : (

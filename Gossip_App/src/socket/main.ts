@@ -2,13 +2,22 @@ import { io, Socket } from "socket.io-client";
 import Cookies from "js-cookie";
 import { addChat } from "../store/slices/ChatSlice";
 import { Dispatch } from "@reduxjs/toolkit";
+import {
+  ClientToServerEvents,
+  ClientToServerEventsTypes,
+  ServertoClientEvents,
+  ServerToClientEventsTypes,
+} from "@gossip/shared";
 
 const SERVER_URL =
   import.meta.env.VITE_API_SERVER_URL || "http://localhost:5000";
 
 const initialToken = Cookies.get("authtoken") || "";
 
-export const socket: Socket = io(SERVER_URL, {
+export const socket: Socket<
+  ServerToClientEventsTypes,
+  ClientToServerEventsTypes
+> = io(SERVER_URL, {
   auth: {
     token: initialToken ? `Bearer ${initialToken}` : "",
   },
@@ -40,43 +49,20 @@ export function disconnectSocket() {
   }
 }
 
-// Deprecated compatibility wrapper - now connects with handshake auth
-export function connecttoserver({
-  dispatch,
-}: {
-  dispatch?: Dispatch;
-  username?: string;
-  profile?: string;
-  uid?: string;
-  settings?: any;
-} = {}) {
-  const token = Cookies.get("authtoken");
-  if (token) {
-    connectSocket(token);
-  }
-}
-
-export function findusers(query: string): Promise<any[]> {
-  return new Promise((resolve, reject) => {
-    socket.emit("user:finduser", query, (users: any) => {
-      if (users) {
-        resolve(users);
-      } else {
-        reject(new Error("No users found"));
-      }
-    });
-  });
-}
-
 export function sendChatRequest(fromuid: string, touid: string): Promise<any> {
   return new Promise((resolve, reject) => {
-    socket.emit("user:sendchatrequest", fromuid, touid, (userResponse: any) => {
-      if (userResponse) {
-        resolve(userResponse);
-      } else {
-        reject(new Error("Your Request has been Rejected"));
-      }
-    });
+    socket.emit(
+      ClientToServerEvents.SendChatRequest,
+      fromuid,
+      touid,
+      (userResponse: any) => {
+        if (userResponse) {
+          resolve(userResponse);
+        } else {
+          reject(new Error("Your Request has been Rejected"));
+        }
+      },
+    );
   });
 }
 
@@ -91,7 +77,7 @@ export function requestAnswer({
 }): Promise<any> {
   return new Promise((resolve, reject) => {
     socket.emit(
-      "user:requestanswer",
+      ClientToServerEvents.RequestAnswer,
       { fromuid, touid, answer },
       (userResponse: any) => {
         if (userResponse) {
@@ -110,30 +96,27 @@ export function sendMessage({
   dispatch,
   type = "text",
 }: {
-  fromuid?: string;
   touid: string;
   message: string | any;
   dispatch: Dispatch;
-  type?: "text" | "image";
+  type: "text" | "image";
 }): Promise<any> {
   return new Promise((resolve, reject) => {
-    socket.emit("chat:sendmessage", { touid, message, type }, (ack: any) => {
-      if (ack) {
-        dispatch(addChat(ack));
-        resolve(ack);
-      } else {
-        reject(new Error("Message has not been sent"));
-      }
-    });
+    socket.emit(
+      ClientToServerEvents.SendMessage,
+      { touid, message, type },
+      (ack: any) => {
+        if (ack) {
+          dispatch(addChat(ack));
+          resolve(ack);
+        } else {
+          reject(new Error("Message has not been sent"));
+        }
+      },
+    );
   });
 }
 
-export function seenMessages({
-  fromuid,
-  touid,
-}: {
-  fromuid: string;
-  touid: string;
-}) {
-  socket.emit("chat:seenmessages", { fromuid, touid });
+export function seenMessages({ fromuid }: { fromuid: string }) {
+  socket.emit(ClientToServerEvents.SeenMessages, { fromuid });
 }

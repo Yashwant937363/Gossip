@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import { motion } from "motion/react";
 import { useDispatch, useSelector } from "react-redux";
 import { setSingleTranslatedMessage } from "../../../../store/slices/ChatSlice";
-import { translateMessages } from "../../../../socket/ai";
 import { ArrowClockwise, Translate } from "react-bootstrap-icons";
 import { RootState, AppDispatch } from "../../../../store/store";
+import { apiTranslate } from "../../../../api/client";
 
 interface ReceivedChatProps {
   chatid?: string;
@@ -48,7 +48,7 @@ export default function ReceivedChat({
     if (!chatid || translating) return;
     setTranslating(true);
     try {
-      const response = await translateMessages({
+      const response = await apiTranslate({
         messages: [{ id: chatid, text: message }],
         to: language,
       });

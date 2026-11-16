@@ -9,7 +9,7 @@ import type {
   TypedServer,
   TypedSocket,
 } from "../types/socket.types.js";
-import { ClientToServerEvents } from "../types/socket.types.js";
+import { ClientToServerEvents } from "@gossip/shared";
 
 export default function registerSettingsHandlers(
   _io: TypedServer,

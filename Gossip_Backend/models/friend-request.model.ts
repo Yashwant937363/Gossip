@@ -1,18 +1,15 @@
 import mongoose, { Schema } from "mongoose";
-import {
-  FriendRequestStatus,
-  IFriendRequest,
-} from "../types/friend-request.types.js";
+import { FriendRequestStatus, IFriendRequest } from "@gossip/shared";
 
 const friendRequestSchema = new Schema<IFriendRequest>(
   {
-    Sender_ID: {
+    senderUid: {
       type: String,
       ref: "User",
       required: true,
       index: true,
     },
-    Receiver_ID: {
+    receiverUid: {
       type: String,
       ref: "User",
       required: true,

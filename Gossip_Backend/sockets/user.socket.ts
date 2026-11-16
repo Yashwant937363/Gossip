@@ -1,25 +1,20 @@
-import {
-  addFriend,
-  getFriendUids,
-  isFriend,
-} from "../repository/friend.repository.js";
+import { addFriend, getFriendUids } from "../repository/friend.repository.js";
 import {
   createFriendRequest,
   findFriendRequestBetween,
-  updateFriendRequestStatus,
 } from "../repository/friend-request.repository.js";
 import { markDeliveredMessages } from "../repository/chat.repository.js";
 import type { UserStore } from "../store/sessionStore.js";
-import { FriendRequestStatus } from "../types/friend-request.types.js";
-import type { TypedServer, TypedSocket } from "../types/socket.types.js";
 import {
   ClientToServerEvents,
+  FriendRequestStatus,
   ServertoClientEvents,
-} from "../types/socket.types.js";
+} from "@gossip/shared";
+import type { TypedServer, TypedSocket } from "../types/socket.types.js";
 
 /**
  * Automatically initializes the session when an authenticated socket connects.
- * Called automatically from index.ts upon connection (replaces manual user:connection).
+ * Called automatically from index.ts upon connection
  */
 export async function setupUserSession(
   socket: TypedSocket,
@@ -31,7 +26,7 @@ export async function setupUserSession(
 
     usersStore.saveUser(uid, {
       ...user,
-      connected: true,
+      online: true,
     });
 
     socket.join(uid);
@@ -68,7 +63,7 @@ export default function registerUserHandlers(
       return;
     }
     if (friend && friend.status === FriendRequestStatus.PENDING) {
-      if (friend.Sender_ID === fromuid) {
+      if (friend.senderUid === fromuid) {
         userfeedback("Request Already Sent");
       } else {
         userfeedback("You Already Have a Request from this User");

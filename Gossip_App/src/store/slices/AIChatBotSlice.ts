@@ -1,24 +1,16 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { AIChatMessage } from "../../types";
+import { Tone, ToneValues } from "@gossip/shared";
 
 export interface AIChatBotState {
-  tones: string[];
-  selectedTone: string;
+  tones: Tone[];
+  selectedTone: Tone;
   messages: AIChatMessage[];
 }
 
 const initialState: AIChatBotState = {
-  tones: [
-    "Formal",
-    "Sarcastic",
-    "Friendly",
-    "Enthusiastic",
-    "Professional",
-    "Casual",
-    "Humorous",
-    "Empathetic",
-  ],
-  selectedTone: "Formal",
+  tones: [...ToneValues],
+  selectedTone: "formal",
   messages: [],
 };
 
@@ -26,12 +18,12 @@ const AiChatBotSlice = createSlice({
   name: "chatbot",
   initialState,
   reducers: {
-    changeTone: (state, action: PayloadAction<string>) => {
+    changeTone: (state, action: PayloadAction<Tone>) => {
       state.selectedTone = action.payload;
     },
     addMessage: (
       state,
-      action: PayloadAction<{ message: string; ai: boolean }>
+      action: PayloadAction<{ message: string; ai: boolean }>,
     ) => {
       const chat: AIChatMessage = {
         text: action.payload.message,

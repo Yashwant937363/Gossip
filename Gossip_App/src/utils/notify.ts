@@ -1,30 +1,37 @@
-import { store } from "../store/store";
 import {
   addNotification,
   removeNotification,
   NotificationType,
 } from "../store/slices/NotificationSlice";
+import { AppDispatch } from "../store/store";
+
+let storeDispatch: AppDispatch | null = null;
+
+export const injectNotificationDispatch = (dispatch: AppDispatch) => {
+  storeDispatch = dispatch;
+};
 
 export const notify = (
   type: NotificationType,
   title: string,
   message: string,
-  duration: number = 4000
+  duration: number = 4000,
 ): string => {
+  if (!storeDispatch) return;
   const id = crypto.randomUUID();
 
-  store.dispatch(
+  storeDispatch(
     addNotification({
       id,
       type,
       title,
       message,
-    })
+    }),
   );
 
   if (duration > 0) {
     setTimeout(() => {
-      store.dispatch(removeNotification(id));
+      storeDispatch(removeNotification(id));
     }, duration);
   }
 
@@ -45,5 +52,7 @@ notify.info = (title: string, message: string, duration: number = 4000) =>
   notify("info", title, message, duration);
 
 notify.dismiss = (id: string) => {
-  store.dispatch(removeNotification(id));
+  if (storeDispatch) {
+    storeDispatch(removeNotification(id));
+  }
 };

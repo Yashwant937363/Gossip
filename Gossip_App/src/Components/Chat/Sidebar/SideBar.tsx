@@ -22,8 +22,8 @@ export default function SideBar() {
     const reversedMessages = [...chats].reverse();
     for (const message of reversedMessages) {
       if (
-        message.Sender_ID === targetUid ||
-        message.Receiver_ID === targetUid
+        message.senderUid === targetUid ||
+        message.receiverUid === targetUid
       ) {
         return message;
       }

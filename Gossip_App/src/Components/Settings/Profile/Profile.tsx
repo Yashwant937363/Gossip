@@ -11,14 +11,8 @@ import { RootState, AppDispatch } from "../../../store/store";
 
 export default function Profile() {
   const dispatch = useDispatch<AppDispatch>();
-  const isLogin = useSelector((state: RootState) => state.user.isLogin);
-  const profile = useSelector((state: RootState) => state.user.profile);
-  const fullname = useSelector((state: RootState) => state.user.fullname);
-  const username = useSelector((state: RootState) => state.user.username);
-  const uid = useSelector((state: RootState) => state.user.uid);
-  const email = useSelector((state: RootState) => state.user.email);
-  const userDob = useSelector((state: RootState) => state.user.dob);
-  const dob = userDob ? new Date(userDob) : null;
+  const { isLogin, profile, firstname, lastname, username, uid, email } =
+    useSelector((state: RootState) => state.user);
 
   const logOut = () => {
     dispatch(clear());
@@ -37,7 +31,9 @@ export default function Profile() {
         <div className="flex flex-col items-center text-center p-8 rounded-2xl bg-bg10/70 border border-bg20 shadow-lg w-full max-w-sm">
           <PersonFillExclamation className="text-5xl text-themeColor mb-4" />
           <h2 className="text-xl font-bold mb-2">You are not logged in</h2>
-          <p className="text-sm opacity-75 mb-6">Log in to view and customize your account details</p>
+          <p className="text-sm opacity-75 mb-6">
+            Log in to view and customize your account details
+          </p>
           <div className="flex items-center gap-4 w-full">
             <Link
               to="/login/signin"
@@ -68,16 +64,20 @@ export default function Profile() {
         <div className="flex items-center gap-5">
           <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-themeColor bg-bg15 flex items-center justify-center shadow-md">
             {profile ? (
-              <img src={profile} alt="Avatar" className="w-full h-full object-cover" />
+              <img
+                src={profile}
+                alt="Avatar"
+                className="w-full h-full object-cover"
+              />
             ) : (
               <Person className="text-4xl text-textColor opacity-70" />
             )}
           </div>
           <div>
             <h3 className="text-xl font-bold text-themeColor">{username}</h3>
-            {fullname?.firstname && (
+            {firstname && (
               <p className="text-sm opacity-80">
-                {fullname.firstname} {fullname.lastname}
+                {firstname} {lastname}
               </p>
             )}
             <span className="text-xs opacity-60 font-mono">UID: {uid}</span>
@@ -89,14 +89,6 @@ export default function Profile() {
             <span className="opacity-70">Email</span>
             <span className="font-medium">{email || "Not provided"}</span>
           </div>
-          {dob && (
-            <div className="flex justify-between py-2 border-b border-bg10">
-              <span className="opacity-70">Date of Birth</span>
-              <span className="font-medium">
-                {dob.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-              </span>
-            </div>
-          )}
         </div>
 
         <button

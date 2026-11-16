@@ -23,8 +23,6 @@ import {
   TranslateMessagesResult,
   ImageAnalysisResult,
   SummarizationResult,
-} from "../schema/groq.schema.js";
-import type {
   AnalyzeImageInput,
   ChatbotInput,
   ChatbotResult,
@@ -32,7 +30,7 @@ import type {
   TranslateMessagesInput,
   SummarizationFormat,
   SummarizationInput,
-} from "../types/groq.types.js";
+} from "@gossip/shared";
 import { safeParseJson } from "../utils/safe-parse-json.js";
 import { validateImageUrl } from "../utils/validate-image-url.js";
 

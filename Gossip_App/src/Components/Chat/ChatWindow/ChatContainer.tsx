@@ -4,10 +4,10 @@ import SendChat from "./SendChat/SendChat";
 import ReceivedChat from "./ReceiveChat/Received";
 import { useNavigate } from "react-router-dom";
 import ChatDate from "./ChatDate";
-import { translateMessages } from "../../../socket/ai";
 import { setMultipleTranslatedMessages } from "../../../store/slices/ChatSlice";
 import { RootState, AppDispatch } from "../../../store/store";
 import { ChevronDown } from "react-bootstrap-icons";
+import { apiTranslate } from "../../../api/client";
 
 export default function ChatContainer() {
   const dispatch = useDispatch<AppDispatch>();
@@ -69,8 +69,8 @@ export default function ChatContainer() {
 
     const filteredChats = chats.filter(
       (item) =>
-        item.Sender_ID === openedchat.uid ||
-        item.Receiver_ID === openedchat.uid,
+        item.senderUid === openedchat.uid ||
+        item.receiverUid === openedchat.uid,
     );
     setUserChats(filteredChats);
 
@@ -88,7 +88,7 @@ export default function ChatContainer() {
     } else if (addedCount > 0) {
       // Brand new message(s) added
       const lastMessage = filteredChats[filteredChats.length - 1];
-      const isSentByMe = lastMessage?.Sender_ID === fromuid;
+      const isSentByMe = lastMessage?.senderUid === fromuid;
 
       if (isSentByMe || isNearBottomRef.current) {
         // User sent it or was already at the bottom: scroll down
@@ -115,7 +115,7 @@ export default function ChatContainer() {
     ) {
       const neededTranslations = filteredChats.filter(
         (chat) =>
-          chat.Receiver_ID === fromuid &&
+          chat.receiverUid === fromuid &&
           chat.type === "text" &&
           (!chat.translatedText ||
             !chat.translatedText.some(
@@ -129,7 +129,7 @@ export default function ChatContainer() {
       }));
 
       if (inputTexts.length > 0) {
-        translateMessages({
+        apiTranslate({
           messages: inputTexts,
           to: userTranslateLanguage,
         })
@@ -164,7 +164,7 @@ export default function ChatContainer() {
           isSameDate(new Date(item.createdAt), date) && item.type === "text",
       )
       .map((item) => ({
-        username: item.Sender_ID === fromuid ? username : openedchat.username,
+        username: item.senderUid === fromuid ? username : openedchat.username,
         message: item.text,
       }));
   };
@@ -211,7 +211,7 @@ export default function ChatContainer() {
                 return "first";
               } else if (index === userchat.length - 1) {
                 //last chat
-                return userchat[index - 1].Sender_ID === item.Sender_ID
+                return userchat[index - 1].senderUid === item.senderUid
                   ? "last"
                   : "first";
               }
@@ -221,15 +221,15 @@ export default function ChatContainer() {
                 currentDate,
                 nextChatDate,
               );
-              return userchat[index - 1].Sender_ID === item.Sender_ID
-                ? userchat[index + 1].Sender_ID === item.Sender_ID &&
+              return userchat[index - 1].senderUid === item.senderUid
+                ? userchat[index + 1].senderUid === item.senderUid &&
                   !isNextChatDataDifferent
                   ? "between"
                   : "last"
                 : "first";
             };
 
-            const isSender = item.Sender_ID === fromuid;
+            const isSender = item.senderUid === fromuid;
             const translatedObj = isSender
               ? null
               : item.translatedText?.find(

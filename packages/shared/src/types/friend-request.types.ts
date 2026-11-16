@@ -1,3 +1,5 @@
+import { SearchUserItem } from "../schemas/user.schema";
+
 export enum FriendRequestStatus {
   PENDING = "Pending",
   ACCEPTED = "Accepted",
@@ -5,7 +7,12 @@ export enum FriendRequestStatus {
 }
 
 export interface IFriendRequest {
-  Sender_ID: string;
-  Receiver_ID: string;
+  senderUid: string;
+  receiverUid: string;
   status: FriendRequestStatus;
+}
+
+export interface SearchUsersResponse {
+  msg: string;
+  users: SearchUserItem[];
 }

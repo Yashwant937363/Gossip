@@ -1,12 +1,22 @@
 import { z } from "zod";
 
+export const SUMMARIZATION_FORMATS = [
+  "paragraph",
+  "bullet",
+  "structured",
+] as const;
+
+export const summarizationFormatSchema = z.enum(SUMMARIZATION_FORMATS);
+
+export type SummarizationFormat = z.infer<typeof summarizationFormatSchema>;
+
+export const summarizationSettingsSchema = z.object({
+  format: summarizationFormatSchema.default("paragraph"),
+});
+
 export const translationSettingsSchema = z.object({
   language: z.string().default("original"),
   alwaysTranslate: z.boolean().default(false),
-});
-
-export const summarizationSettingsSchema = z.object({
-  format: z.enum(["paragraph", "bullet", "structured"]).default("paragraph"),
 });
 
 export const userSettingsSchema = z.object({

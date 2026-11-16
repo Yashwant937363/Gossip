@@ -1,12 +1,12 @@
-import User from "../models/user.model.js";
-import type { IUser } from "../types/user.types.js";
+import { SummarizationFormat } from "@gossip/shared";
+import User, { IUserDocument } from "../models/user.model.js";
 
 export async function findUserById(id: string) {
   return await User.findById(id);
 }
 
 export async function findUserByEmail(email: string) {
-  return await User.findOne({ Email: email });
+  return await User.findOne({ email });
 }
 
 export async function findUserByUid(uid: string) {
@@ -17,11 +17,18 @@ export async function findUsersByUids(uids: string[]) {
   if (uids.length === 0) return [];
   return await User.find(
     { uid: { $in: uids } },
-    { uid: 1, ProfilePicture: 1, Username: 1, _id: 0 },
+    { uid: 1, profile: 1, username: 1, _id: 0 },
   ).lean();
 }
 
-export async function createUser(userData: Partial<IUser>) {
+export type CreateUserInput = Omit<
+  IUserDocument,
+  "_id" | "createdAt" | "updatedAt" | "settings" | keyof Document
+> & {
+  settings?: IUserDocument["settings"]; // Make settings optional at creation time
+};
+
+export async function createUser(userData: CreateUserInput) {
   return await User.create(userData);
 }
 
@@ -30,17 +37,14 @@ export async function searchUsers(query: string) {
   return await User.find({
     $or: [
       { uid: { $regex: trimmed, $options: "i" } },
-      { Username: { $regex: trimmed, $options: "i" } },
-      { FirstName: { $regex: trimmed, $options: "i" } },
-      { LastName: { $regex: trimmed, $options: "i" } },
+      { username: { $regex: trimmed, $options: "i" } },
+      { firstname: { $regex: trimmed, $options: "i" } },
+      { lastname: { $regex: trimmed, $options: "i" } },
     ],
   }).select("-_id -__v -Password");
 }
 
-export async function updateTranslationLanguage(
-  id: string,
-  language: string,
-) {
+export async function updateTranslationLanguage(id: string, language: string) {
   return await User.findByIdAndUpdate(
     id,
     { $set: { "settings.translation.language": language } },
@@ -61,7 +65,7 @@ export async function updateAlwaysTranslate(
 
 export async function updateSummarizationFormat(
   id: string,
-  format: "paragraph" | "bullet_points",
+  format: SummarizationFormat,
 ) {
   return await User.findByIdAndUpdate(
     id,

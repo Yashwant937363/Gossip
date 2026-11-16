@@ -1,4 +1,3 @@
-import type { ChatType } from "../models/chat.model.js";
 import {
   createChatMessage,
   markMessagesAsSeen,
@@ -7,16 +6,11 @@ import { translateMessages } from "../services/groq.service.js";
 import type { UserStore } from "../store/sessionStore.js";
 import type {
   ClientHandler,
-  SeenMessagesPayload,
-  SendMessagePayload,
   TypedServer,
   TypedSocket,
 } from "../types/socket.types.js";
 
-import {
-  ClientToServerEvents,
-  ServertoClientEvents,
-} from "../types/socket.types.js";
+import { ClientToServerEvents, ServertoClientEvents } from "@gossip/shared";
 
 export default function registerChatHandlers(
   _io: TypedServer,
@@ -66,8 +60,8 @@ export default function registerChatHandlers(
         }
 
         newChat = await createChatMessage({
-          Sender_ID: fromuid,
-          Receiver_ID: touid,
+          senderUid: fromuid,
+          receiverUid: touid,
           text: message,
           type: type,
           seen: false,
@@ -77,11 +71,12 @@ export default function registerChatHandlers(
         socket.to(touid).emit(ServertoClientEvents.ReceiveMessage, newChat);
       } else {
         newChat = await createChatMessage({
-          Sender_ID: fromuid,
-          Receiver_ID: touid,
+          senderUid: fromuid,
+          receiverUid: touid,
           type: type,
           text: message,
           seen: false,
+          translatedText: [],
         });
       }
 

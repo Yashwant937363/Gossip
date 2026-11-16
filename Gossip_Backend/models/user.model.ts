@@ -1,10 +1,11 @@
 import mongoose, { Schema } from "mongoose";
-import { IUser } from "../types/user.types.js";
 import {
+  SUMMARIZATION_FORMATS,
   SummarizationSettings,
   TranslationSettings,
   UserSettings,
-} from "../schema/settings.schema.js";
+} from "@gossip/shared";
+import { BaseUser } from "@gossip/shared/schemas/user.schema";
 
 const TranslationSettingsModelSchema = new Schema<TranslationSettings>(
   {
@@ -18,7 +19,7 @@ const SummarizationSettingsModelSchema = new Schema<SummarizationSettings>(
   {
     format: {
       type: String,
-      enum: ["paragraph", "bullet", "structured"],
+      enum: SUMMARIZATION_FORMATS,
       default: "paragraph",
       required: true,
     },
@@ -40,21 +41,26 @@ const UserSettingsModelSchema = new Schema<UserSettings>(
   { _id: false },
 );
 
-const userSchema = new Schema<IUser>(
+export interface IUserDocument extends BaseUser {
+  uid: string;
+  password: string;
+}
+
+const userSchema = new Schema<IUserDocument>(
   {
-    Username: {
+    username: {
       type: String,
       required: true,
     },
-    FirstName: {
+    firstname: {
       type: String,
       default: "",
     },
-    LastName: {
+    lastname: {
       type: String,
       default: "",
     },
-    Email: {
+    email: {
       type: String,
       required: true,
       unique: true,
@@ -63,12 +69,14 @@ const userSchema = new Schema<IUser>(
       type: String,
       required: true,
       unique: true,
+      maxLength: 5,
+      minLength: 5,
     },
-    ProfilePicture: {
+    profile: {
       type: String,
       default: "",
     },
-    Password: {
+    password: {
       type: String,
       required: true,
     },

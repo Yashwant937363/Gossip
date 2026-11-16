@@ -6,6 +6,7 @@ import ThemeSlice from "./slices/ThemeSlice";
 import AIChatBotSlice from "./slices/AIChatBotSlice";
 import callSlice from "./slices/CallSlice";
 import notificationReducer from "./slices/NotificationSlice";
+import { injectNotificationDispatch } from "../utils/notify";
 
 export const store = configureStore({
   reducer: {
@@ -21,3 +22,5 @@ export const store = configureStore({
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
+
+injectNotificationDispatch(store.dispatch);
