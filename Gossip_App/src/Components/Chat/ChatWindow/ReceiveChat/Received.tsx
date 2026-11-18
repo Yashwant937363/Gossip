@@ -5,6 +5,7 @@ import { setSingleTranslatedMessage } from "../../../../store/slices/ChatSlice";
 import { ArrowClockwise, Translate } from "react-bootstrap-icons";
 import { RootState, AppDispatch } from "../../../../store/store";
 import { apiTranslate } from "../../../../api/client";
+import { notify } from "../../../../utils/notify";
 
 interface ReceivedChatProps {
   chatid?: string;
@@ -62,6 +63,7 @@ export default function ReceivedChat({
         );
       }
     } catch (err) {
+      notify.error("Translate", "Translation failed for " + message);
       console.error("Single message translation error:", err);
     } finally {
       setTranslating(false);

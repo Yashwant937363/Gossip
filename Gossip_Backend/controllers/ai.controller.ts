@@ -19,6 +19,7 @@ import {
   TranslateMessagesResult,
 } from "@gossip/shared";
 import { JWTPayload } from "../types/auth.types.js";
+import { saveMessageTranslations } from "../repository/chat.repository.js";
 
 export const handleChatbot = async (
   req: Request<{}, {}, ChatbotInput>,
@@ -74,6 +75,7 @@ export const handleTranslate = async (
 ) => {
   try {
     const { messages, to } = req.body;
+    console.log(messages);
 
     if (!to || typeof to !== "string") {
       return res
@@ -86,6 +88,11 @@ export const handleTranslate = async (
     }
 
     const result = await translateMessages({ messages, to });
+
+    if (result?.messages && result.messages.length > 0) {
+      await saveMessageTranslations(result.language, result.messages);
+    }
+
     return res.status(200).json(result);
   } catch (error: any) {
     console.error("AI Translation Error:", error);
