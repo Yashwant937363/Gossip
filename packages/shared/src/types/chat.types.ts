@@ -36,7 +36,6 @@ export type Friend = UserPreview & {
   online?: boolean;
 };
 export interface GetFriendsAndChatsResponse {
-  msg: string;
   friends: Friend[];
   chats: IChat[];
 }

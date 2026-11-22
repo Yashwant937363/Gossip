@@ -6,6 +6,7 @@ import aiRouter from "./routes/ai.routes.js";
 import authRouter from "./routes/auth.routes.js";
 import chatRouter from "./routes/chat.routes.js";
 import userRouter from "./routes/user.routes.js";
+import { globalErrorHandler } from "./handlers/globalErrorHandler.js";
 
 const app = express();
 
@@ -22,5 +23,7 @@ app.use("/api/auth/", authRouter);
 app.use("/api/chat/", chatRouter);
 app.use("/api/ai/", aiRouter);
 app.use("/api/user/", userRouter);
+
+app.use(globalErrorHandler);
 
 export default app;

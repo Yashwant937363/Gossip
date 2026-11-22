@@ -1,16 +1,23 @@
 import { SummarizationFormat } from "@gossip/shared";
 import User, { IUserDocument } from "../models/user.model.js";
+import { UserNotFoundError } from "../errors/index.js";
 
 export async function findUserById(id: string) {
-  return await User.findById(id);
+  const user = await User.findById(id);
+  if (!user) throw new UserNotFoundError();
+  return user;
 }
 
 export async function findUserByEmail(email: string) {
-  return await User.findOne({ email });
+  const user = await User.findOne({ email });
+  if (!user) throw new UserNotFoundError();
+  return user;
 }
 
 export async function findUserByUid(uid: string) {
-  return await User.findOne({ uid });
+  const user = await User.findOne({ uid });
+  if (!user) throw new UserNotFoundError();
+  return user;
 }
 
 export async function findUsersByUids(uids: string[]) {

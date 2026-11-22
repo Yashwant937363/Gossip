@@ -33,6 +33,7 @@ import {
 } from "@gossip/shared";
 import { safeParseJson } from "../utils/safe-parse-json.js";
 import { validateImageUrl } from "../utils/validate-image-url.js";
+import { GroqServiceError } from "../errors/index.js";
 
 /**
  * Type definition for Groq chat completion runner.
@@ -48,8 +49,15 @@ export type GroqRunner = (
 export async function executeGroqChat(
   params: ChatCompletionCreateParamsNonStreaming,
 ): Promise<string> {
-  const response = await groq.chat.completions.create(params);
-  return response.choices[0]?.message?.content || "";
+  try {
+    const response = await groq.chat.completions.create(params);
+    return response.choices[0]?.message?.content || "";
+  } catch (error: any) {
+    throw new GroqServiceError(
+      error?.message || "Groq AI service request failed",
+      error,
+    );
+  }
 }
 
 /**

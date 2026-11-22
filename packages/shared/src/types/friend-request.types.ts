@@ -13,6 +13,5 @@ export interface IFriendRequest {
 }
 
 export interface SearchUsersResponse {
-  msg: string;
   users: SearchUserItem[];
 }

@@ -1,4 +1,4 @@
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import { searchUsers as searchUsersInDb } from "../repository/user.repository.js";
 import type { JWTPayload } from "../types/auth.types.js";
 import { APIError, SearchUsersResponse } from "@gossip/shared";
@@ -6,6 +6,7 @@ import { APIError, SearchUsersResponse } from "@gossip/shared";
 export const searchUsers = async (
   req: Request,
   res: Response<SearchUsersResponse | APIError, JWTPayload>,
+  next: NextFunction,
 ) => {
   try {
     const query = req.query.q as string;
@@ -15,12 +16,9 @@ export const searchUsers = async (
     }
 
     const users = await searchUsersInDb(query);
-
-    return res.status(200).json({ msg: "ok", users });
+    req.log.info({ userid: res.locals.id }, "Sucess Search Users");
+    return res.status(200).json({ users });
   } catch (error) {
-    console.error(error);
-    return res
-      .status(500)
-      .json({ error: "Something went wrong while fetching user data" });
+    next(error);
   }
 };

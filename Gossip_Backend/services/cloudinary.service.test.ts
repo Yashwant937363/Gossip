@@ -36,11 +36,11 @@ describe("uploadImage", () => {
 
   it("should throw when Cloudinary upload fails", async () => {
     vi.mocked(cloudinary.uploader.upload).mockRejectedValue(
-      new Error("Upload failed"),
+      new Error("Failed to upload chat image"),
     );
 
     await expect(uploadImage("/tmp/test-image.png")).rejects.toThrow(
-      "Upload failed",
+      "Failed to upload chat image",
     );
   });
 });

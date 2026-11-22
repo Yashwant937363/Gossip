@@ -1,4 +1,4 @@
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import {
   analyzeImage,
   generateChatbotReply,
@@ -24,6 +24,7 @@ import { saveMessageTranslations } from "../repository/chat.repository.js";
 export const handleChatbot = async (
   req: Request<{}, {}, ChatbotInput>,
   res: Response<ChatbotResult | APIError, JWTPayload>,
+  next: NextFunction,
 ) => {
   try {
     const { message, tone, history, sessionId } = req.body;
@@ -40,17 +41,15 @@ export const handleChatbot = async (
     });
 
     return res.status(200).json(result);
-  } catch (error: any) {
-    console.error("AI Chatbot Error:", error);
-    return res
-      .status(500)
-      .json({ error: error?.message || "Chatbot service failed" });
+  } catch (error) {
+    next(error);
   }
 };
 
 export const handleImageAnalyze = async (
   req: Request<{}, {}, AnalyzeImageInput>,
   res: Response<ImageAnalysisResult | APIError, JWTPayload>,
+  next: NextFunction,
 ) => {
   try {
     const { url, prompt } = req.body;
@@ -62,16 +61,14 @@ export const handleImageAnalyze = async (
     const result = await analyzeImage({ url, prompt });
     return res.status(200).json(result);
   } catch (error: any) {
-    console.error("AI Image Analyze Error:", error);
-    return res
-      .status(500)
-      .json({ error: error?.message || "Image analysis failed" });
+    next(error);
   }
 };
 
 export const handleTranslate = async (
   req: Request<{}, {}, TranslateMessagesInput>,
   res: Response<TranslateMessagesResult | APIError, JWTPayload>,
+  next: NextFunction,
 ) => {
   try {
     const { messages, to } = req.body;
@@ -94,17 +91,15 @@ export const handleTranslate = async (
     }
 
     return res.status(200).json(result);
-  } catch (error: any) {
-    console.error("AI Translation Error:", error);
-    return res
-      .status(500)
-      .json({ error: error?.message || "Translation failed" });
+  } catch (error) {
+    next(error);
   }
 };
 
 export const handleSummarize = async (
   req: Request<{}, {}, SummarizationInput>,
   res: Response<SummarizationResult | APIError, JWTPayload>,
+  next: NextFunction,
 ) => {
   try {
     const { conversation, format } = req.body;
@@ -115,10 +110,7 @@ export const handleSummarize = async (
 
     const result = await summarizeConversation({ conversation, format });
     return res.status(200).json(result);
-  } catch (error: any) {
-    console.error("AI Summarize Error:", error);
-    return res
-      .status(500)
-      .json({ error: error?.message || "Summarization failed" });
+  } catch (error) {
+    next(error);
   }
 };

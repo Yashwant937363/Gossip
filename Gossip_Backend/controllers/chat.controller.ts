@@ -1,4 +1,4 @@
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import fs from "node:fs";
 import { uploadImage } from "../services/cloudinary.service.js";
 import { UsersStore } from "../store/sessionStore.js";
@@ -18,12 +18,10 @@ import { JWTPayload } from "../types/auth.types.js";
 export const getFriendsandChats = async (
   req: Request,
   res: Response<GetFriendsAndChatsResponse | { error: string }, JWTPayload>,
+  next: NextFunction,
 ) => {
   try {
     const user = await findUserById(res.locals.id);
-    if (!user) {
-      return res.status(404).json({ error: "User not Found" });
-    }
 
     const uid = user.uid;
     const friendUids = await getFriendUids(uid);
@@ -115,18 +113,17 @@ export const getFriendsandChats = async (
     //   }
     // }
     // console.log("Updated", chats);
-    res.status(200).json({ msg: "ok", friends: newFriends, chats });
+    req.log.info({ id: user.id }, "Friends Fetch Successful");
+    res.status(200).json({ friends: newFriends, chats });
   } catch (error) {
-    console.log(error);
-    return res
-      .status(500)
-      .json({ error: "Something went wrong while fetching chats data" });
+    next(error);
   }
 };
 
 export const uploadChatImage = async (
   req: Request,
   res: Response<UploadChatImageResponse | APIError, JWTPayload>,
+  next: NextFunction,
 ) => {
   try {
     if (!req.file) {
@@ -138,13 +135,12 @@ export const uploadChatImage = async (
     if (fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
     }
-
+    req.log.info({ id: res.locals.id }, "Image Uploaded Successfully");
     return res.status(200).json({ success: true, url: secureUrl });
   } catch (error) {
     if (req.file?.path && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
     }
-    console.error("Error uploading chat image:", error);
-    return res.status(500).json({ error: "Failed to upload chat image" });
+    next(error);
   }
 };

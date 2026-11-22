@@ -1,4 +1,4 @@
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import {
   createUser,
   findUserByEmail,
@@ -12,13 +12,19 @@ import { generateEmailOtp, sendEmailOtp } from "../services/email.service.js";
 import { processAndUploadImage } from "../services/image.service.js";
 import { GetUserResponse } from "@gossip/shared";
 import { JWTPayload } from "../types/auth.types.js";
+import {
+  EmailAlreadyExistsError,
+  InvalidCredentialsError,
+} from "../errors/index.js";
 
 export const getUser = async (
   req: Request,
   res: Response<GetUserResponse | { error: string }, JWTPayload>,
+  next: NextFunction,
 ) => {
-  const user = await findUserById(res.locals.id);
-  if (user) {
+  try {
+    const user = await findUserById(res.locals.id);
+
     return res.status(200).json({
       msg: "Sussessfully Login",
       user: {
@@ -31,35 +37,29 @@ export const getUser = async (
         settings: user.settings,
       },
     });
+  } catch (e) {
+    next(e);
   }
-  return res.status(404).json({ error: "Automatic Login Failed" });
 };
 
 export const signupUser = async (
   req: Request<{}, {}, SignupReq>,
   res: Response,
+  next: NextFunction,
 ) => {
   let url = "";
   try {
     const existingUser = await findUserByEmail(req.body.email);
     if (existingUser) {
-      return res
-        .status(401)
-        .json({ error: "Please Enter Unique Email Address" });
+      throw new EmailAlreadyExistsError();
     }
     if (req.file) {
       const inputimagepath = `./assets/profile/${req.file.filename}`;
       const outputimagepath = `./assets/profile/${req.body.email}.png`;
-      try {
-        url = await processAndUploadImage(inputimagepath, outputimagepath);
-      } catch (sharperror) {
-        console.log("Error while processing image Sharp Error :", sharperror);
-        return res.status(500).json({ error: "Image Processing Error" });
-      }
+
+      url = await processAndUploadImage(inputimagepath, outputimagepath);
     }
-
     const password = await getHash(req.body.password);
-
     const newUser = await createUser({
       profile: req.file ? url : "",
       username: req.body.username,
@@ -70,31 +70,31 @@ export const signupUser = async (
       uid: nanoid(5),
     });
     const authtoken = generateToken<JWTPayload>({ id: newUser.id });
+    req.log.info({ id: newUser.id }, "User Created Successfully");
     res.status(201).json({ authtoken: authtoken, uid: newUser.uid });
   } catch (error) {
-    console.log("Server Error : " + error);
-    res.status(500).json({ error: "Internal Server Error" });
+    next(error);
   }
 };
 
 export const signinUser = async (
   req: Request<{}, {}, SigninReq>,
   res: Response,
+  next: NextFunction,
 ) => {
   try {
     const user = await findUserByEmail(req.body.email);
 
-    console.log(req.body.password, user);
     if (!user) {
-      return res.status(401).json({ error: "Login with correct Credentials" });
+      throw new InvalidCredentialsError();
     }
     const passwordCompare = await compareHash(req.body.password, user.password);
     if (!passwordCompare) {
-      return res.status(401).json({ error: "Login with correct Credentials" });
+      throw new InvalidCredentialsError();
     }
 
     const authtoken = generateToken<JWTPayload>({ id: user.id });
-    // Check and send the file if it exists
+    req.log.info({ id: user.id }, "Login Successful");
     res.status(200).json({
       authtoken,
       msg: "Login Successful",
@@ -104,27 +104,24 @@ export const signinUser = async (
       uid: user.uid,
       settings: user.settings,
     });
-  } catch (err) {
-    console.log("Error while Login User : ", err);
-    res.status(500).json({ error: "Server Crashed" });
+  } catch (error) {
+    next(error);
   }
 };
 
-export const sendEmailOtpController = async (req: Request, res: Response) => {
+export const sendEmailOtpController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const otp = generateEmailOtp();
-
     await sendEmailOtp(req.body.email, otp);
-
+    req.log.info("OTP Email sent successfully");
     return res.status(200).json({
-      success: true,
       message: "Email sent successfully",
     });
   } catch (error) {
-    console.error("Failed to send email:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Failed to send email",
-    });
+    next(error);
   }
 };
