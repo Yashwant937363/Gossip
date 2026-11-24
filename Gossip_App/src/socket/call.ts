@@ -1,4 +1,4 @@
-import { ClientToServerEvents } from "@gossip/shared";
+import { ClientToServerEvents, SocketResponse } from "@gossip/shared";
 import { socket } from "./main";
 
 export function sendOutgoingVideoCall({
@@ -9,11 +9,19 @@ export function sendOutgoingVideoCall({
   touid: string;
   offer?: any;
   fromuid?: string;
-}) {
-  socket.emit(ClientToServerEvents.VideoCallOutgoing, {
-    touid,
-    offer,
-    fromuid,
+}): Promise<SocketResponse> {
+  return new Promise((resolve) => {
+    socket.emit(
+      ClientToServerEvents.VideoCallOutgoing,
+      {
+        touid,
+        offer,
+        fromuid: fromuid || "",
+      },
+      (response: SocketResponse) => {
+        resolve(response);
+      },
+    );
   });
 }
 

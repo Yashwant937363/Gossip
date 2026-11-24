@@ -17,6 +17,7 @@ import {
 } from "../../../store/slices/CallSlice";
 import { sendOutgoingVideoCall } from "../../../socket/call";
 import { RootState, AppDispatch } from "../../../store/store";
+import { notify } from "../../../utils/notify";
 
 export default function ChatWindow() {
   const dispatch = useDispatch<AppDispatch>();
@@ -45,9 +46,16 @@ export default function ChatWindow() {
     navigate("/chat/");
   };
 
-  const handleVideoCall = () => {
+  const handleVideoCall = async () => {
     if (!openedchat?.uid) return;
-    sendOutgoingVideoCall({ fromuid, touid: openedchat.uid });
+    const response = await sendOutgoingVideoCall({
+      fromuid,
+      touid: openedchat.uid,
+    });
+    if (response.success === false) {
+      notify.error("Call Failed", response.error);
+      return;
+    }
     dispatch(initializeVideoCall({ type: "video", caller: openedchat }));
     dispatch(setChannel(fromuid));
   };

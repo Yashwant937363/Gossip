@@ -3,7 +3,11 @@ import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { GearWide, List, PersonFill, X } from "react-bootstrap-icons";
 import { useDispatch, useSelector } from "react-redux";
 import { changePreviousPath } from "../../store/slices/UISlice";
-import { getUser, setAuthtoken } from "../../store/slices/UserSlice";
+import {
+  fetchFriendRequests,
+  getUser,
+  setAuthtoken,
+} from "../../store/slices/UserSlice";
 import { fetchFriends } from "../../store/slices/ChatSlice";
 import Cookies from "js-cookie";
 import { RootState, AppDispatch } from "../../store/store";
@@ -38,6 +42,7 @@ export default function Navbar({ title }: NavbarProps) {
   useEffect(() => {
     if (isLogin && authtoken) {
       dispatch(fetchFriends({ authtoken }));
+      dispatch(fetchFriendRequests({ authtoken }));
     }
   }, [isLogin, authtoken, dispatch]);
 

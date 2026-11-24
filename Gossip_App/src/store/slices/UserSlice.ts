@@ -4,6 +4,7 @@ import {
   apiGetUser,
   apiSignIn,
   apiSignUp,
+  apiGetFriendRequests,
   getAuthToken,
 } from "../../api/client";
 import {
@@ -14,6 +15,7 @@ import {
   SignupResponse,
   SummarizationFormat,
   UserSettings,
+  SearchUserItem,
 } from "@gossip/shared";
 import { notify } from "../../utils/notify";
 import axios from "axios";
@@ -25,7 +27,7 @@ export interface UserState extends IPublicUser {
   online: boolean;
   isLogin: boolean;
   isPending: boolean;
-  requests: any[];
+  requests: SearchUserItem[];
 }
 
 const initialState: UserState = {
@@ -113,6 +115,18 @@ export const getUser = createAsyncThunk<
   }
 });
 
+export const fetchFriendRequests = createAsyncThunk<
+  SearchUserItem[],
+  { authtoken?: string }
+>("user/fetchFriendRequests", async ({ authtoken }) => {
+  try {
+    const data = await apiGetFriendRequests(authtoken);
+    return data.requests || [];
+  } catch (error: any) {
+    return [];
+  }
+});
+
 const userSlice = createSlice({
   name: "user",
   initialState,
@@ -127,6 +141,7 @@ const userSlice = createSlice({
       state.uid = "";
       state.online = false;
       state.isLogin = false;
+      state.requests = [];
       Cookies.remove("authtoken");
     },
     setSignUpDetails: (
@@ -226,6 +241,11 @@ const userSlice = createSlice({
     builder.addCase(getUser.rejected, (state) => {
       state.isPending = false;
       Cookies.remove("authtoken");
+    });
+
+    // Fetch Friend Requests
+    builder.addCase(fetchFriendRequests.fulfilled, (state, action) => {
+      state.requests = action.payload || [];
     });
   },
 });

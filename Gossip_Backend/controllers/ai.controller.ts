@@ -72,7 +72,6 @@ export const handleTranslate = async (
 ) => {
   try {
     const { messages, to } = req.body;
-    console.log(messages);
 
     if (!to || typeof to !== "string") {
       return res

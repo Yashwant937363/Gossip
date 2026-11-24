@@ -21,6 +21,7 @@ import {
   ClientToServerEventsTypes,
   ServerToClientEventsTypes,
 } from "@gossip/shared";
+import { logger } from "./config/logger.js";
 
 const httpServer = createServer(app);
 
@@ -41,12 +42,7 @@ connectDatabase(env.dbUrl);
 io.use(authSocket);
 
 const onConnection = async (socket: TypedSocket) => {
-  console.log(
-    "Authenticated user connected:",
-    socket.id,
-    "UID:",
-    socket.data.uid,
-  );
+  socket.data.log.info("Authenticated user connected:");
 
   // Automatically register session, join room, broadcast friendonline, update unseen messages
   await setupUserSession(socket, UsersStore);
@@ -61,5 +57,5 @@ const onConnection = async (socket: TypedSocket) => {
 io.on("connection", onConnection);
 
 httpServer.listen(env.port, () =>
-  console.log("Server running on PORT : " + env.port),
+  logger.info("Server running on PORT : " + env.port),
 );

@@ -7,10 +7,26 @@ import { markDeliveredMessages } from "../repository/chat.repository.js";
 import type { UserStore } from "../store/sessionStore.js";
 import {
   ClientToServerEvents,
+  ClientToServerEventsTypes,
   FriendRequestStatus,
   ServertoClientEvents,
+  socketError,
+  socketSuccess,
 } from "@gossip/shared";
-import type { TypedServer, TypedSocket } from "../types/socket.types.js";
+import type {
+  ClientHandler,
+  TypedServer,
+  TypedSocket,
+} from "../types/socket.types.js";
+import { safeSocketHandler } from "../utils/socket-error-handler.js";
+import {
+  AlreadyFriendsError,
+  FriendRequestAlreadySentError,
+  FriendRequestNotFoundError,
+  IncomingFriendRequestExistsError,
+  InvalidRequestRecipientError,
+  InvalidUidError,
+} from "../errors/friend-request.error.js";
 
 /**
  * Automatically initializes the session when an authenticated socket connects.
@@ -32,13 +48,11 @@ export async function setupUserSession(
     socket.join(uid);
 
     const friendUids = await getFriendUids(uid);
-    friendUids.forEach((friendUid) => {
-      socket.to(friendUid).emit(ServertoClientEvents.FriendOnline, { uid });
-    });
-
+    socket.to(friendUids).emit(ServertoClientEvents.FriendOnline, { uid });
+    socket.data.log.info("Setuped User Session");
     await markDeliveredMessages(uid);
   } catch (error) {
-    console.error("Error setting up user socket session:", error);
+    socket.data.log.error(error, "Error setting up user socket session:");
   }
 }
 
@@ -47,28 +61,23 @@ export default function registerUserHandlers(
   socket: TypedSocket,
   usersStore: UserStore,
 ): void {
-  const sendRequestUser = async (
-    fromuid: string,
-    touid: string,
-    userfeedback: (msg: string) => void,
-  ) => {
+  const sendRequestUser: ClientHandler<
+    ClientToServerEvents.SendChatRequest
+  > = async ({ fromuid, touid }, ack) => {
     if (fromuid.length !== 5 || touid.length !== 5) {
-      userfeedback("Invalid Uid");
-      return;
+      throw new InvalidUidError();
     }
 
     const friend = await findFriendRequestBetween(fromuid, touid);
     if (friend && friend.status === FriendRequestStatus.ACCEPTED) {
-      userfeedback("Your Already Friends");
-      return;
+      throw new AlreadyFriendsError();
     }
     if (friend && friend.status === FriendRequestStatus.PENDING) {
       if (friend.senderUid === fromuid) {
-        userfeedback("Request Already Sent");
+        throw new FriendRequestAlreadySentError();
       } else {
-        userfeedback("You Already Have a Request from this User");
+        throw new IncomingFriendRequestExistsError();
       }
-      return;
     }
     const fromUserUID = socket.data.uid;
     const toUser = usersStore.getUser(touid);
@@ -80,72 +89,72 @@ export default function registerUserHandlers(
         username: socket.data.user.username,
       });
     }
-    userfeedback("Request Sent");
+    socket.data.log.info({ fromuid, touid }, "Request Sended Successfully");
+    ack(socketSuccess());
   };
 
-  const requestAnswer = async (
-    {
-      fromuid,
-      touid,
-      answer,
-    }: {
-      fromuid: string;
-      touid: string;
-      answer: boolean;
-    },
-    userfeedback: (msg: string | null) => void,
-  ) => {
+  const requestAnswer: ClientHandler<
+    ClientToServerEvents.RequestAnswer
+  > = async ({ fromuid, touid, answer }, ack) => {
     if (touid !== socket.data.uid) {
-      userfeedback("Invalid Request");
-      return;
+      throw new InvalidRequestRecipientError();
     }
-    const friend = await findFriendRequestBetween(fromuid, touid);
-    if (!friend) {
-      userfeedback("You Don't Have a Request from this User");
-      return;
+    const friendReq = await findFriendRequestBetween(fromuid, touid);
+    if (!friendReq) {
+      throw new FriendRequestNotFoundError();
     }
-    if (friend.status === FriendRequestStatus.REJECTED) {
-      userfeedback("Request Already Rejected");
-      return;
-    }
-    if (friend && friend.status === FriendRequestStatus.ACCEPTED) {
-      userfeedback("Your Already Friends");
-      return;
+    if (friendReq.status === FriendRequestStatus.ACCEPTED) {
+      throw new AlreadyFriendsError();
     }
     if (answer) {
-      friend.status = FriendRequestStatus.ACCEPTED;
+      friendReq.status = FriendRequestStatus.ACCEPTED;
       await addFriend(fromuid, touid);
-      await friend.save();
+      await friendReq.save();
       const { settings, ...user } = socket.data.user;
       socket.to(fromuid).emit(ServertoClientEvents.SuccessMessage, {
         msg: "Request Accepted by " + socket.data.user.username,
         user: user,
       });
     } else {
+      await friendReq.deleteOne();
       socket
         .to(fromuid)
         .emit(
           ServertoClientEvents.ErrorMessage,
           "Request Rejected by " + socket.data.user.username,
         );
-      friend.status = FriendRequestStatus.REJECTED;
-      await friend.save();
     }
+    socket.data.log.info({ reqId: friendReq.id }, "Requst Cycle Completed");
+    ack(socketSuccess());
   };
 
-  const handleDisconnect = async () => {
+  const handleDisconnect = async (reason: any) => {
     const uid = socket.data.uid;
-    if (uid) {
-      const friendUids = await getFriendUids(uid);
-      friendUids.forEach((friendUid) => {
-        socket.to(friendUid).emit(ServertoClientEvents.FriendOffline, { uid });
-      });
-      usersStore.userDisconnected(uid);
-    }
-    console.log("User Disconnected:", socket.id, "UID:", uid);
+
+    const friendUids = await getFriendUids(uid);
+    friendUids.forEach((friendUid) => {
+      socket.to(friendUid).emit(ServertoClientEvents.FriendOffline, { uid });
+    });
+    usersStore.userDisconnected(uid);
+
+    socket.data.log.warn({ reason }, "User Disconnected");
   };
 
-  socket.on(ClientToServerEvents.SendChatRequest, sendRequestUser);
-  socket.on(ClientToServerEvents.RequestAnswer, requestAnswer);
+  socket.on(
+    ClientToServerEvents.SendChatRequest,
+    safeSocketHandler(
+      socket,
+      ClientToServerEvents.SendChatRequest,
+      sendRequestUser,
+    ),
+  );
+  socket.on(
+    ClientToServerEvents.RequestAnswer,
+    safeSocketHandler(
+      socket,
+      ClientToServerEvents.RequestAnswer,
+      requestAnswer,
+    ),
+  );
   socket.on("disconnect", handleDisconnect);
 }

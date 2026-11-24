@@ -7,6 +7,7 @@ import { requestAnswer } from "../../../../socket/main";
 import { motion } from "motion/react";
 import { RootState, AppDispatch } from "../../../../store/store";
 import { notify } from "../../../../utils/notify";
+import { SocketResponse } from "@gossip/shared";
 
 interface RequestItemProps {
   uid: string;
@@ -31,6 +32,10 @@ export default function RequestItem({
         touid,
         answer,
       });
+      if (res.success === false) {
+        notify.error(res.code, res.error);
+        return;
+      }
       notify.success(
         answer ? "Request Accepted" : "Request Rejected",
         answer ? "You are now friends!" : "Friend request rejected",

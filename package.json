@@ -12,6 +12,7 @@
     "install:backend": "npm install --workspace=Gossip_Backend",
     "build:frontend": "npm run build --workspace=Gossip_App",
     "build:backend": "npm run build --workspace=Gossip_Backend",
-    "start:backend": "npm run start --workspace=Gossip_Backend"
+    "start:backend": "npm run start --workspace=Gossip_Backend",
+    "dev:both": "npm run dev --workspace=Gossip_App & npm run dev --workspace=Gossip_Backend"
   }
 }

@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { logger } from "./logger";
 
 export default function connectDatabase(conStr: string) {
   mongoose.connect(conStr);
@@ -6,10 +7,10 @@ export default function connectDatabase(conStr: string) {
   const db = mongoose.connection;
 
   db.on("error", (err) => {
-    console.error("Database Connection Error : ", err);
+    logger.error("Database Connection Error : ", err);
   });
 
   db.once("open", () => {
-    console.log("Database Conected Successfully");
+    logger.info("Database Conected Successfully");
   });
 }

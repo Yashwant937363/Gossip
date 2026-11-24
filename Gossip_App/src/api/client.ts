@@ -7,6 +7,7 @@ import {
   GetFriendsAndChatsResponse,
   GetUserResponse,
   ImageAnalysisResult,
+  SearchUserItem,
   SearchUsersResponse,
   SigninReq,
   SigninResponse,
@@ -99,6 +100,19 @@ export const apiGetFriends = async (token?: string) => {
   const response = await api.post<GetFriendsAndChatsResponse>(
     "/api/chat/getFriends",
     {},
+    {
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    },
+  );
+  return response.data;
+};
+
+export const apiGetFriendRequests = async (token?: string) => {
+  const authToken = token || getAuthToken();
+  const response = await api.get<{ requests: SearchUserItem[] }>(
+    "/api/user/requests",
     {
       headers: {
         Authorization: `Bearer ${authToken}`,

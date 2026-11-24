@@ -10,6 +10,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import * as jwtService from "../services/jwt.service.js";
+import * as userRepository from "../repository/user.repository.js";
 import User from "../models/user.model.js";
 import type { JWTPayload } from "../types/auth.types.js";
 import { authSocket } from "./authSocket.middleware.js";
@@ -33,7 +34,7 @@ describe("authSocket", () => {
 
   // Spies
   const mockVerifyToken = vi.spyOn(jwtService, "verifyToken");
-  const mockFindById = vi.spyOn(User, "findById");
+  const mockFindById = vi.spyOn(userRepository, "findUserById");
 
   beforeEach(() => {
     socket = {
@@ -73,8 +74,11 @@ describe("authSocket", () => {
     expect(next).toHaveBeenCalledWith();
   });
 
-  it("should call next(error) when token is missing", async () => {
-    socket.handshake.auth.token = undefined;
+  it.each([
+    ["missing", undefined],
+    ["empty", ""],
+  ])("should call next(error) when token is %s ", async (_label, token) => {
+    socket.handshake.auth.token = token;
 
     await authSocket(socket, next);
 
@@ -93,7 +97,6 @@ describe("authSocket", () => {
     ["only Bearer", "Bearer"],
     ["Bearer with a space", "Bearer "],
     ["starting with some thing else", "Basic abc123"],
-    ["Empty String", ""],
   ])(
     "should call next(error) when token format is %s",
     async (_label, token) => {

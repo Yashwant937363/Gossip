@@ -1,3 +1,4 @@
+import { EmptyMessageError } from "../errors";
 import {
   createChatMessage,
   markMessagesAsSeen,
@@ -10,7 +11,13 @@ import type {
   TypedSocket,
 } from "../types/socket.types.js";
 
-import { ClientToServerEvents, ServertoClientEvents } from "@gossip/shared";
+import {
+  ClientToServerEvents,
+  IChat,
+  ServertoClientEvents,
+  socketSuccess,
+} from "@gossip/shared";
+import { safeSocketHandler } from "../utils/socket-error-handler.js";
 
 export default function registerChatHandlers(
   _io: TypedServer,
@@ -19,88 +26,73 @@ export default function registerChatHandlers(
 ): void {
   const sendMessage: ClientHandler<ClientToServerEvents.SendMessage> = async (
     { touid, message, type },
-    acknowledgmentCallback,
+    ack,
   ) => {
-    try {
-      const fromuid = socket.data.uid;
-      let newChat: any;
+    const fromuid = socket.data.uid;
+    let newChat: IChat;
 
-      if (type === "text") {
-        if (!message || message.trim() === "") {
-          return acknowledgmentCallback(false);
-        }
-      }
-
-      const receiver = usersStore.getUser(touid);
-
-      if (receiver) {
-        let getTranslated:
-          | { language: string; translatedText: string }
-          | undefined;
-
-        if (
-          receiver.settings?.translation?.alwaysTranslate &&
-          type === "text"
-        ) {
-          try {
-            const translationRes = await translateMessages({
-              messages: [{ id: "new", text: message }],
-              to: receiver.settings.translation.language,
-            });
-
-            if (translationRes.messages.length > 0) {
-              getTranslated = {
-                language: translationRes.language,
-                translatedText: translationRes.messages[0].translatedText,
-              };
-            }
-          } catch (err) {
-            console.error("Translation during chat send error:", err);
-          }
-        }
-
-        newChat = await createChatMessage({
-          senderUid: fromuid,
-          receiverUid: touid,
-          text: message,
-          type: type,
-          seen: false,
-          translatedText: getTranslated ? [getTranslated] : [],
-        });
-
-        socket.to(touid).emit(ServertoClientEvents.ReceiveMessage, newChat);
-      } else {
-        newChat = await createChatMessage({
-          senderUid: fromuid,
-          receiverUid: touid,
-          type: type,
-          text: message,
-          seen: false,
-          translatedText: [],
-        });
-      }
-
-      acknowledgmentCallback(newChat);
-    } catch (error) {
-      console.error("Error in chat:sendmessage handler:", error);
-      acknowledgmentCallback(false);
+    if (type === "text" && message.trim() === "") {
+      throw new EmptyMessageError();
     }
+
+    const receiver = usersStore.getUser(touid);
+    let getTranslated: { language: string; translatedText: string } | undefined;
+
+    if (
+      receiver &&
+      receiver.settings.translation.alwaysTranslate &&
+      type === "text"
+    ) {
+      try {
+        const translationRes = await translateMessages({
+          messages: [{ id: "new", text: message }],
+          to: receiver.settings.translation.language,
+        });
+
+        if (translationRes.messages.length > 0) {
+          getTranslated = {
+            language: translationRes.language,
+            translatedText: translationRes.messages[0].translatedText,
+          };
+        }
+      } catch (err) {
+        socket.data.log.error("Translation during chat send error:" + err);
+      }
+    }
+
+    newChat = await createChatMessage({
+      senderUid: fromuid,
+      receiverUid: touid,
+      text: message,
+      type: type,
+      seen: false,
+      translatedText: getTranslated ? [getTranslated] : [],
+    });
+
+    if (receiver) {
+      socket.to(touid).emit(ServertoClientEvents.ReceiveMessage, newChat);
+    }
+    ack(socketSuccess(newChat));
   };
 
   const receiverSeenMessages: ClientHandler<
     ClientToServerEvents.SeenMessages
   > = async ({ fromuid }) => {
-    try {
-      const touid = socket.data.uid;
-      await markMessagesAsSeen(fromuid, touid);
-      socket
-        .to(fromuid)
-        .emit(ServertoClientEvents.SeenMessages, { uid: touid });
-    } catch (error) {
-      console.error("Error in chat:seenmessages handler:", error);
-    }
+    const touid = socket.data.uid;
+    await markMessagesAsSeen(fromuid, touid);
+    socket.to(fromuid).emit(ServertoClientEvents.SeenMessages, { uid: touid });
   };
 
-  socket.on(ClientToServerEvents.SendMessage, sendMessage);
-  socket.on(ClientToServerEvents.SeenMessages, receiverSeenMessages);
+  socket.on(
+    ClientToServerEvents.SendMessage,
+    safeSocketHandler(socket, ClientToServerEvents.SendMessage, sendMessage),
+  );
+  socket.on(
+    ClientToServerEvents.SeenMessages,
+    safeSocketHandler(
+      socket,
+      ClientToServerEvents.SeenMessages,
+      receiverSeenMessages,
+    ),
+  );
 }

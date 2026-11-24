@@ -61,6 +61,7 @@ export default function App() {
     socket.on(
       ServertoClientEvents.RequestFromUser,
       ({ uid, profile, username }: any) => {
+        notify.info("Friend Request", `${username} sent you a friend request`);
         dispatch(addRequest({ uid, profile, username }));
       },
     );

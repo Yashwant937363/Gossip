@@ -4,11 +4,13 @@ import {
   ClientToServerEventsTypes,
   ServerToClientEventsTypes,
 } from "@gossip/shared";
+import { Logger } from "pino";
 
 export interface SocketData {
   id: string; // Mongo user ObjectId string
   uid: string; // User 5-char unique ID
   user: UserSession; // User document or session
+  log: Logger;
 }
 
 export interface InterServerEvents {}

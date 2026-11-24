@@ -3,7 +3,6 @@ import { SearchUserItem } from "../schemas/user.schema";
 export enum FriendRequestStatus {
   PENDING = "Pending",
   ACCEPTED = "Accepted",
-  REJECTED = "Rejected",
 }
 
 export interface IFriendRequest {

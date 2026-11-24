@@ -5,6 +5,40 @@ import type {
 } from "../schemas/settings.schema";
 import { UserPreview } from "../schemas/user.schema";
 
+export type SocketSuccessResponse<T = void> = {
+  success: true;
+  data?: T;
+  message?: string;
+};
+
+export type SocketErrorResponse = {
+  success: false;
+  error: string;
+  code: string;
+};
+
+export type SocketResponse<T = void> =
+  | SocketSuccessResponse<T>
+  | SocketErrorResponse;
+
+export const socketSuccess = <T = void>(
+  data?: T,
+  message?: string,
+): SocketSuccessResponse<T> => ({
+  success: true,
+  ...(data !== undefined ? { data } : {}),
+  ...(message ? { message } : {}),
+});
+
+export const socketError = (
+  error: string,
+  code = "SOCKET_ERROR",
+): SocketErrorResponse => ({
+  success: false,
+  error,
+  code,
+});
+
 export type UserSession = UserPreview & {
   settings: UserSettings;
   online?: boolean;
@@ -82,15 +116,14 @@ export interface ClientToServerEventsTypes {
   // Chat events
   [ClientToServerEvents.SendMessage]: (
     payload: SendMessagePayload,
-    ack: (result: IChat | false) => void,
+    ack: (response: SocketResponse<IChat>) => void,
   ) => void;
   [ClientToServerEvents.SeenMessages]: (payload: SeenMessagesPayload) => void;
 
   // Friend & User events
   [ClientToServerEvents.SendChatRequest]: (
-    fromuid: string,
-    touid: string,
-    feedback: (msg: string) => void,
+    payload: { fromuid: string; touid: string },
+    ack: (response: SocketResponse) => void,
   ) => void;
   [ClientToServerEvents.RequestAnswer]: (
     payload: {
@@ -98,15 +131,18 @@ export interface ClientToServerEventsTypes {
       touid: string;
       answer: boolean;
     },
-    feedback: (msg: string | null) => void,
+    ack: (response: SocketResponse) => void,
   ) => void;
 
-  // WebRTC Call events
-  [ClientToServerEvents.VideoCallOutgoing]: (data: {
-    fromuid: string;
-    touid: string;
-    offer: any;
-  }) => void;
+  // Video Call events
+  [ClientToServerEvents.VideoCallOutgoing]: (
+    data: {
+      fromuid: string;
+      touid: string;
+      offer: any;
+    },
+    ack: (res: SocketResponse) => void,
+  ) => void;
   [ClientToServerEvents.VideoCallRinging]: (data: { fromuid: string }) => void;
   [ClientToServerEvents.VideoCallAnswer]: (data: {
     touid: string;
@@ -115,11 +151,20 @@ export interface ClientToServerEventsTypes {
   [ClientToServerEvents.VideoCallCanceled]: (data: { touid: string }) => void;
 
   // Settings events
-  [ClientToServerEvents.ChangeLanguage]: (data: { language: string }) => void;
-  [ClientToServerEvents.ChangeAlwaysTranslate]: (data: {
-    alwaysTranslate: boolean;
-  }) => void;
-  [ClientToServerEvents.ChangeSummarizationFormat]: (data: {
-    format: SummarizationFormat;
-  }) => void;
+  [ClientToServerEvents.ChangeLanguage]: (
+    data: { language: string },
+    ack: (response: SocketResponse<{ language: string }>) => void,
+  ) => void;
+  [ClientToServerEvents.ChangeAlwaysTranslate]: (
+    data: {
+      alwaysTranslate: boolean;
+    },
+    ack: (response: SocketResponse<{ alwaysTranslate: boolean }>) => void,
+  ) => void;
+  [ClientToServerEvents.ChangeSummarizationFormat]: (
+    data: {
+      format: SummarizationFormat;
+    },
+    ack: (response: SocketResponse<{ format: SummarizationFormat }>) => void,
+  ) => void;
 }

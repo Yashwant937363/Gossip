@@ -7,6 +7,7 @@ import {
   ClientToServerEventsTypes,
   ServertoClientEvents,
   ServerToClientEventsTypes,
+  SocketResponse,
 } from "@gossip/shared";
 
 const SERVER_URL =
@@ -53,13 +54,12 @@ export function sendChatRequest(fromuid: string, touid: string): Promise<any> {
   return new Promise((resolve, reject) => {
     socket.emit(
       ClientToServerEvents.SendChatRequest,
-      fromuid,
-      touid,
-      (userResponse: any) => {
-        if (userResponse) {
-          resolve(userResponse);
+      { fromuid, touid },
+      (response) => {
+        if (response.success === false) {
+          reject(new Error(response.error));
         } else {
-          reject(new Error("Your Request has been Rejected"));
+          resolve(response.message);
         }
       },
     );
@@ -74,18 +74,12 @@ export function requestAnswer({
   fromuid: string;
   touid: string;
   answer: boolean;
-}): Promise<any> {
+}): Promise<SocketResponse> {
   return new Promise((resolve, reject) => {
     socket.emit(
       ClientToServerEvents.RequestAnswer,
       { fromuid, touid, answer },
-      (userResponse: any) => {
-        if (userResponse) {
-          resolve(userResponse);
-        } else {
-          reject(new Error("Your Request has been Rejected"));
-        }
-      },
+      (response) => resolve(response),
     );
   });
 }
@@ -105,12 +99,12 @@ export function sendMessage({
     socket.emit(
       ClientToServerEvents.SendMessage,
       { touid, message, type },
-      (ack: any) => {
-        if (ack) {
-          dispatch(addChat(ack));
-          resolve(ack);
+      (ack) => {
+        if (ack.success == false) {
+          reject(new Error(ack.error || "Message has not been sent"));
         } else {
-          reject(new Error("Message has not been sent"));
+          dispatch(addChat(ack.data));
+          resolve(ack);
         }
       },
     );

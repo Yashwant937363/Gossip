@@ -14,6 +14,7 @@ import {
   SUMMARIZATION_FORMATS,
   SummarizationFormat,
 } from "@gossip/shared";
+import { notify } from "../../../utils/notify";
 
 export default function AISettings() {
   const dispatch = useDispatch<AppDispatch>();
@@ -42,22 +43,67 @@ export default function AISettings() {
   }));
 
   const handleLanguageChange = (newLang: string) => {
+    const previousLanguage = language;
     dispatch(changeLanguage(newLang));
-    socket.emit(ClientToServerEvents.ChangeLanguage, { language: newLang });
+    socket.emit(
+      ClientToServerEvents.ChangeLanguage,
+      { language: newLang },
+      (response) => {
+        dispatch(
+          changeLanguage(
+            response.success ? response.data.language : previousLanguage,
+          ),
+        );
+        if (response.success === false) {
+          notify.error(response.code, response.error);
+        }
+      },
+    );
   };
 
   const handleAlwaysTranslateChange = (val: boolean) => {
+    const previousAlwaysTranslate = alwaysTranslate;
     dispatch(changeAlwaysTranslate(val));
-    socket.emit(ClientToServerEvents.ChangeAlwaysTranslate, {
-      alwaysTranslate: val,
-    });
+    socket.emit(
+      ClientToServerEvents.ChangeAlwaysTranslate,
+      {
+        alwaysTranslate: val,
+      },
+      (response) => {
+        dispatch(
+          changeAlwaysTranslate(
+            response.success
+              ? response.data.alwaysTranslate
+              : previousAlwaysTranslate,
+          ),
+        );
+        if (response.success === false) {
+          notify.error(response.code, response.error);
+        }
+      },
+    );
   };
 
   const handleFormatChange = (newFormat: SummarizationFormat) => {
+    const previousFormat = format;
     dispatch(changeSummarizationFormat(newFormat));
-    socket.emit(ClientToServerEvents.ChangeSummarizationFormat, {
-      format: newFormat,
-    });
+    socket.emit(
+      ClientToServerEvents.ChangeSummarizationFormat,
+      {
+        format: newFormat,
+      },
+      (response) => {
+        dispatch(
+          changeSummarizationFormat(
+            response.success ? response.data.format : previousFormat,
+          ),
+        );
+
+        if (response.success === false) {
+          notify.error(response.code, response.error);
+        }
+      },
+    );
   };
 
   useEffect(() => {

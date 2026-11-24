@@ -1,4 +1,6 @@
 import { AppError } from "./appError";
+export * from "./friend-request.error";
+export * from "./chat.error";
 
 export class UserNotFoundError extends AppError {
   constructor(message = "User not found") {
@@ -45,5 +47,11 @@ export class ImageUploadError extends AppError {
 export class GroqServiceError extends AppError {
   constructor(message = "Groq AI service failed", details?: unknown) {
     super(message, 502, "GROQ_SERVICE_ERROR", details);
+  }
+}
+
+export class ReceiverOfflineError extends AppError {
+  constructor(message = "receiver is offline") {
+    super(message, 409, "RECEIVER_OFFLINE");
   }
 }
