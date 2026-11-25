@@ -8,7 +8,7 @@ import {
   ServertoClientEvents,
   socketSuccess,
 } from "@gossip/shared";
-import { safeSocketHandler } from "../utils/socket-error-handler.js";
+import { onSocketEvent } from "../utils/on-socket-event.js";
 import { userStore } from "../store/sessionStore.js";
 import { ReceiverOfflineError } from "../errors/index.js";
 
@@ -53,36 +53,20 @@ export default function registerCallHandlers(
     socket.to(fromuid).emit(ServertoClientEvents.VideoCallRinging);
   };
 
-  socket.on(
+  onSocketEvent(
+    socket,
     ClientToServerEvents.VideoCallOutgoing,
-    safeSocketHandler(
-      socket,
-      ClientToServerEvents.VideoCallOutgoing,
-      videoCallOutgoing,
-    ),
+    videoCallOutgoing,
   );
-  socket.on(
-    ClientToServerEvents.VideoCallAnswer,
-    safeSocketHandler(
-      socket,
-      ClientToServerEvents.VideoCallAnswer,
-      videoCallAnswer,
-    ),
-  );
-  socket.on(
+  onSocketEvent(socket, ClientToServerEvents.VideoCallAnswer, videoCallAnswer);
+  onSocketEvent(
+    socket,
     ClientToServerEvents.VideoCallCanceled,
-    safeSocketHandler(
-      socket,
-      ClientToServerEvents.VideoCallCanceled,
-      videoCallCanceled,
-    ),
+    videoCallCanceled,
   );
-  socket.on(
+  onSocketEvent(
+    socket,
     ClientToServerEvents.VideoCallRinging,
-    safeSocketHandler(
-      socket,
-      ClientToServerEvents.VideoCallRinging,
-      videoCallRinging,
-    ),
+    videoCallRinging,
   );
 }

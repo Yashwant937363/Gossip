@@ -17,7 +17,7 @@ import {
   ServertoClientEvents,
   socketSuccess,
 } from "@gossip/shared";
-import { safeSocketHandler } from "../utils/socket-error-handler.js";
+import { onSocketEvent } from "../utils/on-socket-event.js";
 
 export default function registerChatHandlers(
   _io: TypedServer,
@@ -83,16 +83,10 @@ export default function registerChatHandlers(
     socket.to(fromuid).emit(ServertoClientEvents.SeenMessages, { uid: touid });
   };
 
-  socket.on(
-    ClientToServerEvents.SendMessage,
-    safeSocketHandler(socket, ClientToServerEvents.SendMessage, sendMessage),
-  );
-  socket.on(
+  onSocketEvent(socket, ClientToServerEvents.SendMessage, sendMessage);
+  onSocketEvent(
+    socket,
     ClientToServerEvents.SeenMessages,
-    safeSocketHandler(
-      socket,
-      ClientToServerEvents.SeenMessages,
-      receiverSeenMessages,
-    ),
+    receiverSeenMessages,
   );
 }

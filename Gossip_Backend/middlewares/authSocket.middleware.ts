@@ -4,17 +4,23 @@ import type { JWTPayload } from "../types/auth.types.js";
 import { verifyToken } from "../services/jwt.service.js";
 import type { SocketData } from "../types/socket.types.js";
 import { logger } from "../config/logger.js";
+import {
+  recordSocketConnectionAttempt,
+  recordSocketConnectionError,
+} from "../metrics/socket.metrics.js";
 
 export async function authSocket(
   socket: Socket<any, any, any, SocketData>,
   next: (err?: Error) => void,
 ) {
+  recordSocketConnectionAttempt();
   const socketLog = logger.child({ socketId: socket.id });
   try {
     const authHeader = socket.handshake.auth?.token;
 
     if (!authHeader) {
       socketLog.warn("Socket connection rejected: Missing token");
+      recordSocketConnectionError("missing_token");
       return next(new Error("Authentication error: Missing token"));
     }
 
@@ -22,12 +28,14 @@ export async function authSocket(
       (authHeader.startsWith("Bearer ") && authHeader?.trim().split(" ")[1]) ||
       undefined;
     if (!token) {
+      recordSocketConnectionError("missing_token");
       return next(new Error("Authentication error: Missing token"));
     }
 
     const { id } = verifyToken<JWTPayload>(token);
     if (!id) {
       socketLog.warn("Socket connection rejected: Invalid Payload");
+      recordSocketConnectionError("invalid_token");
       return next(new Error("Authentication error: Invalid token payload"));
     }
 
@@ -37,6 +45,7 @@ export async function authSocket(
         { userId: id },
         "Socket connection rejected: User not found",
       );
+      recordSocketConnectionError("user_not_found");
       return next(new Error("Authentication error: User not found"));
     }
 
@@ -62,6 +71,7 @@ export async function authSocket(
       { err: error.message },
       "Socket connection rejected: Token verification failed",
     );
+    recordSocketConnectionError("invalid_token");
     return next(new Error("Authentication error: Invalid or expired token"));
   }
 }

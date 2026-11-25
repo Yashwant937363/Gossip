@@ -12,7 +12,7 @@ import type {
   TypedSocket,
 } from "../types/socket.types.js";
 import { ClientToServerEvents, socketSuccess } from "@gossip/shared";
-import { safeSocketHandler } from "../utils/socket-error-handler.js";
+import { onSocketEvent } from "../utils/on-socket-event.js";
 
 export default function registerSettingsHandlers(
   _io: TypedServer,
@@ -79,28 +79,15 @@ export default function registerSettingsHandlers(
     }
   };
 
-  socket.on(
-    ClientToServerEvents.ChangeLanguage,
-    safeSocketHandler(
-      socket,
-      ClientToServerEvents.ChangeLanguage,
-      changeLanguage,
-    ),
-  );
-  socket.on(
+  onSocketEvent(socket, ClientToServerEvents.ChangeLanguage, changeLanguage);
+  onSocketEvent(
+    socket,
     ClientToServerEvents.ChangeAlwaysTranslate,
-    safeSocketHandler(
-      socket,
-      ClientToServerEvents.ChangeAlwaysTranslate,
-      changeAlwaysTranslate,
-    ),
+    changeAlwaysTranslate,
   );
-  socket.on(
+  onSocketEvent(
+    socket,
     ClientToServerEvents.ChangeSummarizationFormat,
-    safeSocketHandler(
-      socket,
-      ClientToServerEvents.ChangeSummarizationFormat,
-      changeSummarizationFormat,
-    ),
+    changeSummarizationFormat,
   );
 }

@@ -7,13 +7,21 @@ import authRouter from "./routes/auth.routes.js";
 import chatRouter from "./routes/chat.routes.js";
 import userRouter from "./routes/user.routes.js";
 import { globalErrorHandler } from "./handlers/globalErrorHandler.js";
+import { metricsMiddleware } from "./middlewares/metrics.middleware.js";
+import { register } from "./metrics/index.js";
 
 const app = express();
 
 app.use(pinoHttp({ logger, redact: ["req.headers.authorization"] }));
+app.use(metricsMiddleware);
 
 app.use(express.json());
 app.use(cors());
+
+app.get("/metrics", async (_req, res) => {
+  res.setHeader("Content-Type", register.contentType);
+  res.send(await register.metrics());
+});
 
 app.get("/", (_req, res) => {
   res.send("hello world");

@@ -18,7 +18,7 @@ import type {
   TypedServer,
   TypedSocket,
 } from "../types/socket.types.js";
-import { safeSocketHandler } from "../utils/socket-error-handler.js";
+import { onSocketEvent } from "../utils/on-socket-event.js";
 import {
   AlreadyFriendsError,
   FriendRequestAlreadySentError,
@@ -140,21 +140,7 @@ export default function registerUserHandlers(
     socket.data.log.warn({ reason }, "User Disconnected");
   };
 
-  socket.on(
-    ClientToServerEvents.SendChatRequest,
-    safeSocketHandler(
-      socket,
-      ClientToServerEvents.SendChatRequest,
-      sendRequestUser,
-    ),
-  );
-  socket.on(
-    ClientToServerEvents.RequestAnswer,
-    safeSocketHandler(
-      socket,
-      ClientToServerEvents.RequestAnswer,
-      requestAnswer,
-    ),
-  );
+  onSocketEvent(socket, ClientToServerEvents.SendChatRequest, sendRequestUser);
+  onSocketEvent(socket, ClientToServerEvents.RequestAnswer, requestAnswer);
   socket.on("disconnect", handleDisconnect);
 }

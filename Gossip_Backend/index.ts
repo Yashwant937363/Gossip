@@ -22,6 +22,10 @@ import {
   ServerToClientEventsTypes,
 } from "@gossip/shared";
 import { logger } from "./config/logger.js";
+import {
+  recordSocketConnect,
+  recordSocketDisconnect,
+} from "./metrics/socket.metrics.js";
 
 const httpServer = createServer(app);
 
@@ -42,6 +46,14 @@ connectDatabase(env.dbUrl);
 io.use(authSocket);
 
 const onConnection = async (socket: TypedSocket) => {
+  const connectedAt = process.hrtime.bigint();
+  recordSocketConnect();
+
+  socket.on("disconnect", () => {
+    const durationSeconds = Number(process.hrtime.bigint() - connectedAt) / 1e9;
+    recordSocketDisconnect(durationSeconds);
+  });
+
   socket.data.log.info("Authenticated user connected:");
 
   // Automatically register session, join room, broadcast friendonline, update unseen messages
