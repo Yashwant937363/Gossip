@@ -1,0 +1,19 @@
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: true
+
+  - name: "Loki (Grafana Cloud)"
+    type: loki
+    access: proxy
+    url: "$__env{LOKI_URL}"
+    basicAuth: true
+    basicAuthUser: "$__env{LOKI_USERNAME}"
+    secureJsonData:
+      basicAuthPassword: "$__env{LOKI_TOKEN}"
+    editable: true

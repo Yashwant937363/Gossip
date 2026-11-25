@@ -15,6 +15,9 @@ interface ENV {
   groqApiKey: string;
   groqDefaultModel: string;
   groqVisionModel: string;
+  lokiUrl: string;
+  lokiUsername: string;
+  lokiToken: string;
 }
 
 export const env: ENV = {
@@ -31,4 +34,7 @@ export const env: ENV = {
   groqApiKey: process.env.GROQ_API_KEY || "",
   groqDefaultModel: process.env.GROQ_DEFAULT_MODEL || "openai/gpt-oss-120b",
   groqVisionModel: process.env.GROQ_VISION_MODEL || "qwen/qwen3.8-27b",
+  lokiUrl: process.env.LOKI_URL || "",
+  lokiUsername: process.env.LOKI_USERNAME || "",
+  lokiToken: process.env.LOKI_TOKEN || "",
 };
