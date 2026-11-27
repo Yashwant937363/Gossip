@@ -3,7 +3,11 @@ import { Router } from "express";
 import authUser from "../middlewares/authUser.middleware.js";
 import upload from "../middlewares/upload.middleware.js";
 import { validateBody } from "../middlewares/validateBody.middleware.js";
-import { signinReqSchema, signupReqSchema } from "@gossip/shared";
+import {
+  sendEmailOtpReqSchema,
+  signinReqSchema,
+  signupReqSchema,
+} from "@gossip/shared";
 
 import {
   getUser,
@@ -29,6 +33,10 @@ router.post(
   signinUser,
 );
 
-router.post("/send-email-otp", sendEmailOtpController);
+router.post(
+  "/send-email-otp",
+  validateBody(sendEmailOtpReqSchema),
+  sendEmailOtpController,
+);
 
 export default router;

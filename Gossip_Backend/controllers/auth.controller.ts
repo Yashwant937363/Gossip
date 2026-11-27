@@ -5,7 +5,7 @@ import {
   findUserById,
 } from "../repository/user.repository.js";
 import { nanoid } from "nanoid";
-import { SigninReq, SignupReq } from "@gossip/shared";
+import { SendEmailOtpReq, SigninReq, SignupReq } from "@gossip/shared";
 import { compareHash, getHash } from "../services/bcrypt.service.js";
 import { generateToken } from "../services/jwt.service.js";
 import { generateEmailOtp, sendEmailOtp } from "../services/email.service.js";
@@ -113,7 +113,7 @@ export const signinUser = async (
 };
 
 export const sendEmailOtpController = async (
-  req: Request,
+  req: Request<{}, {}, SendEmailOtpReq>,
   res: Response,
   next: NextFunction,
 ) => {
