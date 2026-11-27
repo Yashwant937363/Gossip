@@ -20,6 +20,7 @@ import {
 } from "@gossip/shared";
 import { JWTPayload } from "../types/auth.types.js";
 import { saveMessageTranslations } from "../repository/chat.repository.js";
+import { findUserById } from "../repository/user.repository.js";
 
 export const handleChatbot = async (
   req: Request<{}, {}, ChatbotInput>,
@@ -86,7 +87,8 @@ export const handleTranslate = async (
     const result = await translateMessages({ messages, to });
 
     if (result?.messages && result.messages.length > 0) {
-      await saveMessageTranslations(result.language, result.messages);
+      const user = await findUserById(res.locals.id);
+      await saveMessageTranslations(result.language, result.messages, user.uid);
     }
 
     return res.status(200).json(result);

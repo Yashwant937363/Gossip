@@ -1,8 +1,9 @@
-import { EmptyMessageError } from "../errors";
+import { EmptyMessageError, NotFriendsError } from "../errors/index.js";
 import {
   createChatMessage,
   markMessagesAsSeen,
 } from "../repository/chat.repository.js";
+import { isFriend } from "../repository/friend.repository.js";
 import { translateMessages } from "../services/groq.service.js";
 import type { UserStore } from "../store/sessionStore.js";
 import type {
@@ -33,6 +34,10 @@ export default function registerChatHandlers(
 
     if (type === "text" && message.trim() === "") {
       throw new EmptyMessageError();
+    }
+
+    if (!(await isFriend(fromuid, touid))) {
+      throw new NotFriendsError();
     }
 
     const receiver = usersStore.getUser(touid);

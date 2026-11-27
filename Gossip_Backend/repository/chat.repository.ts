@@ -39,6 +39,7 @@ export interface MessageTranslationUpdate {
 export async function saveMessageTranslations(
   language: string,
   translations: MessageTranslationUpdate[],
+  ownerUid: string,
 ) {
   if (!translations || translations.length === 0) return;
 
@@ -50,7 +51,10 @@ export async function saveMessageTranslations(
 
   const bulkOps = validTranslations.map((item) => ({
     updateOne: {
-      filter: { _id: new mongoose.Types.ObjectId(item.id) },
+      filter: {
+        _id: new mongoose.Types.ObjectId(item.id),
+        $or: [{ senderUid: ownerUid }, { receiverUid: ownerUid }],
+      },
       update: [
         {
           $set: {

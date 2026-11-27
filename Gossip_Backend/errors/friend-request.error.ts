@@ -37,3 +37,9 @@ export class InvalidRequestRecipientError extends AppError {
     super(message, 403, "INVALID_REQUEST_RECIPIENT");
   }
 }
+
+export class NotFriendsError extends AppError {
+  constructor(message = "You can only interact with accepted friends") {
+    super(message, 403, "NOT_FRIENDS");
+  }
+}

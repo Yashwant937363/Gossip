@@ -10,15 +10,23 @@ import {
 } from "@gossip/shared";
 import { onSocketEvent } from "../utils/on-socket-event.js";
 import { userStore } from "../store/sessionStore.js";
-import { ReceiverOfflineError } from "../errors/index.js";
+import { NotFriendsError, ReceiverOfflineError } from "../errors/index.js";
+import { isFriend } from "../repository/friend.repository.js";
 
 export default function registerCallHandlers(
   _io: TypedServer,
   socket: TypedSocket,
 ): void {
+  const ensureFriends = async (peerUid: string): Promise<void> => {
+    if (!(await isFriend(socket.data.uid, peerUid))) {
+      throw new NotFriendsError();
+    }
+  };
+
   const videoCallOutgoing: ClientHandler<
     ClientToServerEvents.VideoCallOutgoing
-  > = ({ touid, offer }, ack) => {
+  > = async ({ touid, offer }, ack) => {
+    await ensureFriends(touid);
     const receiver = userStore.getUser(touid);
     if (!receiver) {
       throw new ReceiverOfflineError();
@@ -33,21 +41,24 @@ export default function registerCallHandlers(
 
   const videoCallAnswer: ClientHandler<
     ClientToServerEvents.VideoCallAnswer
-  > = ({ touid, answer }) => {
+  > = async ({ touid, answer }) => {
+    await ensureFriends(touid);
     socket.data.log.info({ touid }, "Video Call Ans");
     socket.to(touid).emit(ServertoClientEvents.VideoCallAnswer, { answer });
   };
 
   const videoCallCanceled: ClientHandler<
     ClientToServerEvents.VideoCallCanceled
-  > = ({ touid }) => {
+  > = async ({ touid }) => {
+    await ensureFriends(touid);
     socket.data.log.info({ touid }, "Video Call Canceled");
     socket.to(touid).emit(ServertoClientEvents.VideoCallCanceled);
   };
 
   const videoCallRinging: ClientHandler<
     ClientToServerEvents.VideoCallRinging
-  > = ({ fromuid }: { fromuid: string }) => {
+  > = async ({ fromuid }: { fromuid: string }) => {
+    await ensureFriends(fromuid);
     // here fromuid refer to the user who is calling, and we are notifying the caller that the callee is ringing
     socket.data.log.info({ fromuid }, "Video Call Ringing");
     socket.to(fromuid).emit(ServertoClientEvents.VideoCallRinging);
