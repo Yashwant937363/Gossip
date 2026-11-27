@@ -1,6 +1,6 @@
 import { createServer } from "node:http";
 import { Server } from "socket.io";
-import connectDatabase from "./config/database.js";
+import connectDatabase, { disconnectDatabase } from "./config/database.js";
 import { env } from "./config/env.js";
 import { authSocket } from "./middlewares/authSocket.middleware.js";
 import registerCallHandlers from "./sockets/call.socket.js";
@@ -22,10 +22,13 @@ import {
   ServerToClientEventsTypes,
 } from "@gossip/shared";
 import { logger } from "./config/logger.js";
+import { recordAppError } from "./metrics/registry.js";
 import {
   recordSocketConnect,
   recordSocketDisconnect,
 } from "./metrics/socket.metrics.js";
+
+const SHUTDOWN_TIMEOUT_MS = 10_000;
 
 const httpServer = createServer(app);
 
@@ -39,8 +42,6 @@ const io: TypedServer = new Server<
     origin: "*",
   },
 });
-
-connectDatabase(env.dbUrl);
 
 // Socket Handshake Authentication Middleware
 io.use(authSocket);
@@ -68,6 +69,68 @@ const onConnection = async (socket: TypedSocket) => {
 
 io.on("connection", onConnection);
 
-httpServer.listen(env.port, () =>
-  logger.info("Server running on PORT : " + env.port),
-);
+let isShuttingDown = false;
+
+async function shutdown(signal: string, exitCode = 0): Promise<void> {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+
+  logger.info({ signal }, "Graceful shutdown initiated");
+
+  const forceExitTimer = setTimeout(() => {
+    logger.error("Forced shutdown after timeout");
+    process.exit(1);
+  }, SHUTDOWN_TIMEOUT_MS);
+  forceExitTimer.unref();
+
+  try {
+    await new Promise<void>((resolve) => {
+      if (httpServer.listening) {
+        io.close(() => resolve());
+      } else {
+        resolve();
+      }
+    });
+
+    await disconnectDatabase();
+    logger.info("Graceful shutdown completed");
+    logger.flush?.();
+    clearTimeout(forceExitTimer);
+    process.exit(exitCode);
+  } catch (error) {
+    logger.error({ err: error }, "Error during graceful shutdown");
+    logger.flush?.();
+    clearTimeout(forceExitTimer);
+    process.exit(1);
+  }
+}
+
+process.on("SIGTERM", () => void shutdown("SIGTERM", 0));
+process.on("SIGINT", () => void shutdown("SIGINT", 0));
+
+process.on("unhandledRejection", (reason) => {
+  logger.error({ err: reason }, "Unhandled Promise Rejection");
+  recordAppError("global", "error");
+  void shutdown("unhandledRejection", 1);
+});
+
+process.on("uncaughtException", (error) => {
+  logger.error({ err: error }, "Uncaught Exception");
+  recordAppError("global", "error");
+  void shutdown("uncaughtException", 1);
+});
+
+async function startServer(): Promise<void> {
+  try {
+    await connectDatabase(env.dbUrl);
+    httpServer.listen(env.port, () =>
+      logger.info("Server running on PORT : " + env.port),
+    );
+  } catch (error) {
+    logger.error({ err: error }, "Failed to start server");
+    logger.flush?.();
+    process.exit(1);
+  }
+}
+
+void startServer();

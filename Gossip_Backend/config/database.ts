@@ -1,16 +1,22 @@
 import mongoose from "mongoose";
-import { logger } from "./logger";
+import { logger } from "./logger.js";
 
-export default function connectDatabase(conStr: string) {
-  mongoose.connect(conStr);
-
+export default async function connectDatabase(conStr: string): Promise<void> {
   const db = mongoose.connection;
 
   db.on("error", (err) => {
-    logger.error("Database Connection Error : ", err);
+    logger.error({ err }, "Database Connection Error");
   });
 
   db.once("open", () => {
-    logger.info("Database Conected Successfully");
+    logger.info("Database Connected Successfully");
   });
+
+  await mongoose.connect(conStr);
+}
+
+export async function disconnectDatabase(): Promise<void> {
+  if (mongoose.connection.readyState !== 0) {
+    await mongoose.connection.close();
+  }
 }
