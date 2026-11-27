@@ -9,9 +9,7 @@ export async function findUserById(id: string) {
 }
 
 export async function findUserByEmail(email: string) {
-  const user = await User.findOne({ email });
-  if (!user) throw new UserNotFoundError();
-  return user;
+  return await User.findOne({ email });
 }
 
 export async function findUserByUid(uid: string) {
