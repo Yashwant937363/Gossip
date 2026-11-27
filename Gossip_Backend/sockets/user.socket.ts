@@ -104,7 +104,10 @@ export async function setupUserSession(
     await markDeliveredMessages(uid);
 
     if (!(socket.connected as boolean)) {
-      usersStore.userDisconnected(uid, socket.id);
+      const shouldMarkOffline = usersStore.userDisconnected(uid, socket.id);
+      if (shouldMarkOffline && !wasAlreadyOnline) {
+        io.to(friendUids).emit(ServertoClientEvents.FriendOffline, { uid });
+      }
     }
   } catch (error) {
     socket.data.log.error(error, "Error setting up user socket session:");

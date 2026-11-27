@@ -216,4 +216,36 @@ describe("User socket session lifecycle", () => {
       expect.anything(),
     );
   });
+
+  it("emits FriendOffline and removes session if socket disconnects during markDeliveredMessages", async () => {
+    const socket = createMockSocket("sock-1");
+    let resolveMarkDelivered!: () => void;
+    mockMarkDelivered.mockReturnValueOnce(
+      new Promise((res) => {
+        resolveMarkDelivered = () => res(undefined as any);
+      }),
+    );
+
+    const setupPromise = setupUserSession(io, socket, store);
+
+    // Wait for getFriendUids to resolve and FriendOnline to be emitted
+    await vi.waitFor(() => {
+      expect(socket._roomEmit).toHaveBeenCalledWith(
+        ServertoClientEvents.FriendOnline,
+        { uid: "user1" },
+      );
+    });
+
+    // Simulate client disconnecting while markDeliveredMessages is in flight
+    socket.connected = false;
+    resolveMarkDelivered();
+    await setupPromise;
+
+    expect(store.getUser("user1")).toBeUndefined();
+    expect(io.to).toHaveBeenCalledWith(["friend1", "friend2"]);
+    expect(ioToEmit).toHaveBeenCalledWith(
+      ServertoClientEvents.FriendOffline,
+      { uid: "user1" },
+    );
+  });
 });
