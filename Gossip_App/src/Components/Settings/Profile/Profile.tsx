@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import Cookies from "js-cookie";
 import { clear } from "../../../store/slices/UserSlice";
 import GoBackButton from "../../Buttons/GoBackButton/GoBackButton";
-import { disconnectSocket } from "../../../socket/main";
+import { disconnectSocket } from "../../../socket";
 import { clearChat } from "../../../store/slices/ChatSlice";
 import { RootState, AppDispatch } from "../../../store/store";
 

@@ -21,6 +21,7 @@ export default function Navbar({ title }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const profile = useSelector((state: RootState) => state.user.profile);
   const isLogin = useSelector((state: RootState) => state.user.isLogin);
+  const isOnline = useSelector((state: RootState) => state.user.online);
   const authtoken = useSelector((state: RootState) => state.user.authtoken);
   const location = useLocation();
 
@@ -109,13 +110,25 @@ export default function Navbar({ title }: NavbarProps) {
             <NavLink
               to="/settings"
               onClick={handleNavlinkClick}
-              className={({ isActive }) =>
-                `w-8 h-8 rounded-full flex items-center justify-center overflow-hidden border transition-all ${
-                  isActive
-                    ? "border-themeColor shadow-[0_0_8px_var(--theme-color)]"
-                    : "border-bg20 hover:border-themeColor"
-                }`
+              title={
+                isLogin
+                  ? isOnline
+                    ? "Connected to socket"
+                    : "Disconnected from socket"
+                  : "Settings"
               }
+              className={({ isActive }) => {
+                const statusRing =
+                  isLogin && location.pathname !== "/chat"
+                    ? isOnline
+                      ? "ring-2 ring-green-500 border-green-500"
+                      : "ring-2 ring-red-500 border-red-500"
+                    : isActive
+                      ? "border-themeColor shadow-[0_0_8px_var(--theme-color)]"
+                      : "border-bg20 hover:border-themeColor";
+
+                return `w-8 h-8 rounded-full flex items-center justify-center overflow-hidden border transition-all ${statusRing}`;
+              }}
             >
               {location.pathname !== "/chat" ? (
                 <div className="w-full h-full flex items-center justify-center bg-bg15 text-textColor text-sm">

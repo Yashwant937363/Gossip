@@ -3,7 +3,7 @@ import { PersonFill } from "react-bootstrap-icons";
 import { useDispatch, useSelector } from "react-redux";
 import { removeRequest } from "../../../../store/slices/UserSlice";
 import { addFriend } from "../../../../store/slices/ChatSlice";
-import { requestAnswer } from "../../../../socket/main";
+import { requestAnswer } from "../../../../socket";
 import { motion } from "motion/react";
 import { RootState, AppDispatch } from "../../../../store/store";
 import { notify } from "../../../../utils/notify";

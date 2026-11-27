@@ -22,8 +22,7 @@ import {
   TelephoneFill,
 } from "react-bootstrap-icons";
 import { cancelVideoCall } from "../../../store/slices/CallSlice";
-import { socket } from "../../../socket/main";
-import { socketCancelVideoCall } from "../../../socket/call";
+import { socket, socketCancelVideoCall } from "../../../socket";
 import { motion, useAnimate } from "motion/react";
 import VirtualBackgroundExtension from "agora-extension-virtual-background";
 import { RootState, AppDispatch } from "../../../store/store";

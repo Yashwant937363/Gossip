@@ -5,7 +5,7 @@ import { SendFill, X } from "react-bootstrap-icons";
 import { registerLicense } from "@syncfusion/ej2-base";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { sendMessage } from "../../../socket/main";
+import { sendMessage } from "../../../socket";
 import { apiUploadImage } from "../../../api/client";
 import { RootState, AppDispatch } from "../../../store/store";
 

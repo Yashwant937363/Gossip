@@ -9,6 +9,7 @@ import userRouter from "./routes/user.routes.js";
 import { globalErrorHandler } from "./handlers/globalErrorHandler.js";
 import { metricsMiddleware } from "./middlewares/metrics.middleware.js";
 import { register } from "./metrics/index.js";
+import { UsersStore } from "./store/sessionStore.js";
 
 const app = express();
 
@@ -25,6 +26,15 @@ app.get("/metrics", async (_req, res) => {
 
 app.get("/", (_req, res) => {
   res.send("hello world");
+});
+
+// Temporary debug endpoint to inspect in-memory UserStore sessions (including socketId)
+app.get("/debug/user-store", (_req, res) => {
+  const users = UsersStore.findAllUsers();
+  res.json({
+    count: users.length,
+    users,
+  });
 });
 
 app.use("/api/auth/", authRouter);

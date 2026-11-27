@@ -10,12 +10,12 @@ import { setSeenMessages } from "../../../store/slices/ChatSlice";
 import { Outlet, useNavigate, useParams } from "react-router-dom";
 import MessageBar from "./MessageBar";
 import ChatContainer from "./ChatContainer";
-import { seenMessages, sendMessage } from "../../../socket/main";
+import { seenMessages, sendMessage } from "../../../socket";
 import {
   initializeVideoCall,
   setChannel,
 } from "../../../store/slices/CallSlice";
-import { sendOutgoingVideoCall } from "../../../socket/call";
+import { sendOutgoingVideoCall } from "../../../socket";
 import { RootState, AppDispatch } from "../../../store/store";
 import { notify } from "../../../utils/notify";
 

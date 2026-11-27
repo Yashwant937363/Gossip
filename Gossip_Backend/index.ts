@@ -57,7 +57,7 @@ const onConnection = async (socket: TypedSocket) => {
   socket.data.log.info("Authenticated user connected:");
 
   // Automatically register session, join room, broadcast friendonline, update unseen messages
-  await setupUserSession(socket, UsersStore);
+  await setupUserSession(io, socket, UsersStore);
 
   // Register real-time event handlers
   registerUserHandlers(io, socket, UsersStore);

@@ -6,7 +6,7 @@ import {
   setCallType,
   setChannel,
 } from "../../../store/slices/CallSlice";
-import { socketCancelVideoCall } from "../../../socket/call";
+import { socketCancelVideoCall } from "../../../socket";
 import { RootState, AppDispatch } from "../../../store/store";
 
 interface IncomingCallProps {

@@ -6,15 +6,6 @@ import Chat from "./Components/Chat/Chat";
 import NotFound from "./Components/NotFound/NotFound";
 import { useDispatch, useSelector } from "react-redux";
 import Account from "./Components/Account/Account";
-import { addRequest, setOnline } from "./store/slices/UserSlice";
-import {
-  addChat,
-  addFriend,
-  setFriendOffline,
-  setFriendOnline,
-  setReceivedMessages,
-  setSeenMessages,
-} from "./store/slices/ChatSlice";
 import About from "./Components/About/About";
 import ChatWindow from "./Components/Chat/ChatWindow/ChatWindow";
 import Settings from "./Components/Settings/Settings";
@@ -23,120 +14,20 @@ import Themes from "./Components/Settings/Themes/Themes";
 import ImageEditor from "./Components/Chat/ImageEditor/ImageEditor";
 import { setThemeColor, setThemeMode } from "./store/slices/ThemeSlice";
 import Cookies from "js-cookie";
-import { connectSocket, socket } from "./socket/main";
+import { useSocket } from "./socket";
 import ChatBot from "./Components/ChatBot/ChatBot";
-import { cancelVideoCall, initializeVideoCall } from "./store/slices/CallSlice";
-import { store, RootState, AppDispatch } from "./store/store";
-import { videoCallRingingReceiverSide } from "./socket/call";
+import { type AppDispatch, RootState } from "./store/store";
 import ImageViewer from "./Components/Chat/ChatWindow/ImageViewer/ImageViewer";
 import AISettings from "./Components/Settings/AISettings/AISettings";
-import { ServertoClientEvents } from "@gossip/shared";
 import { NotificationContainer } from "./Components/Notifications";
-import { notify } from "./utils/notify";
 
 export default function App() {
   const dispatch = useDispatch<AppDispatch>();
-  const { isLogin, authtoken } = useSelector((state: RootState) => state.user);
   const themeColor = useSelector((state: RootState) => state.theme.themeColor);
   const themeMode = useSelector((state: RootState) => state.theme.themeMode);
   const colors = useSelector((state: RootState) => state.theme.colors);
 
-  // Setup Socket listeners with Handshake lifecycle
-  useEffect(() => {
-    const handleConnect = () => {
-      dispatch(setOnline(true));
-    };
-
-    const handleDisconnect = () => {
-      dispatch(setOnline(false));
-    };
-
-    socket.on("connect", handleConnect);
-    socket.on("disconnect", handleDisconnect);
-    socket.on("connect_error", (err) => {
-      console.warn("Socket connect error:", err.message);
-      dispatch(setOnline(false));
-    });
-
-    socket.on(
-      ServertoClientEvents.RequestFromUser,
-      ({ uid, profile, username }: any) => {
-        notify.info("Friend Request", `${username} sent you a friend request`);
-        dispatch(addRequest({ uid, profile, username }));
-      },
-    );
-
-    socket.on(ServertoClientEvents.SuccessMessage, ({ msg, user }: any) => {
-      if (msg) notify.success("Success", msg);
-      if (user) dispatch(addFriend(user));
-    });
-
-    socket.on(ServertoClientEvents.ErrorMessage, (message: string) => {
-      notify.error("Error", message);
-    });
-
-    socket.on(ServertoClientEvents.FriendOnline, ({ uid }: { uid: string }) => {
-      dispatch(setFriendOnline(uid));
-      dispatch(setReceivedMessages(uid));
-    });
-
-    socket.on(
-      ServertoClientEvents.FriendOffline,
-      ({ uid }: { uid: string }) => {
-        dispatch(setFriendOffline(uid));
-      },
-    );
-
-    socket.on(ServertoClientEvents.ReceiveMessage, (newChat: any) => {
-      dispatch(addChat(newChat));
-    });
-
-    socket.on(ServertoClientEvents.SeenMessages, ({ uid }: { uid: string }) => {
-      dispatch(setSeenMessages(uid));
-    });
-
-    socket.on(
-      ServertoClientEvents.VideoCallIncoming,
-      ({ fromuid }: { fromuid: string }) => {
-        const currentFriends = store.getState().chat.friends;
-        const caller = currentFriends.find((u) => u.uid === fromuid);
-        videoCallRingingReceiverSide({ fromuid });
-        dispatch(
-          initializeVideoCall({
-            type: "incomingvideo",
-            caller: caller || { uid: fromuid, username: fromuid },
-          }),
-        );
-      },
-    );
-
-    socket.on(ServertoClientEvents.VideoCallCanceled, () => {
-      notify.info("Call Ended", "The call was ended");
-      dispatch(cancelVideoCall());
-    });
-
-    return () => {
-      socket.off("connect", handleConnect);
-      socket.off("disconnect", handleDisconnect);
-      socket.off("connect_error");
-      socket.off(ServertoClientEvents.RequestFromUser);
-      socket.off(ServertoClientEvents.SuccessMessage);
-      socket.off(ServertoClientEvents.ErrorMessage);
-      socket.off(ServertoClientEvents.FriendOnline);
-      socket.off(ServertoClientEvents.FriendOffline);
-      socket.off(ServertoClientEvents.ReceiveMessage);
-      socket.off(ServertoClientEvents.SeenMessages);
-      socket.off(ServertoClientEvents.VideoCallIncoming);
-      socket.off(ServertoClientEvents.VideoCallCanceled);
-    };
-  }, [dispatch]);
-
-  // Connect socket on login/token availability
-  useEffect(() => {
-    if (isLogin && authtoken) {
-      connectSocket(authtoken);
-    }
-  }, [isLogin, authtoken]);
+  useSocket();
 
   // Sync theme css variables
   useEffect(() => {

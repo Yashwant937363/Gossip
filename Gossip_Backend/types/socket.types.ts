@@ -11,6 +11,9 @@ export interface SocketData {
   uid: string; // User 5-char unique ID
   user: UserSession; // User document or session
   log: Logger;
+  activeEvents?: number;
+  isReplacing?: boolean;
+  onEventsDrained?: () => void;
 }
 
 export interface InterServerEvents {}

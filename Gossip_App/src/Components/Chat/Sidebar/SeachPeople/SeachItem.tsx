@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Check2, PersonAdd, PersonFill } from "react-bootstrap-icons";
 import { useSelector } from "react-redux";
-import { sendChatRequest } from "../../../../socket/main";
+import { sendChatRequest } from "../../../../socket";
 import { RootState } from "../../../../store/store";
 import { notify } from "../../../../utils/notify";
 

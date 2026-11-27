@@ -2,14 +2,14 @@ import React, { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { Outlet, useNavigate } from "react-router-dom";
 import SideBar from "./Sidebar/SideBar";
-import { connectSocket } from "../../socket/main";
 import Call from "./Call/Call";
 import { RootState } from "../../store/store";
 
 export default function Chat() {
   const isLogin = useSelector((state: RootState) => state.user.isLogin);
-  const authtoken = useSelector((state: RootState) => state.user.authtoken);
-  const callInitialize = useSelector((state: RootState) => state.call.callInitialize);
+  const callInitialize = useSelector(
+    (state: RootState) => state.call.callInitialize,
+  );
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -17,12 +17,6 @@ export default function Chat() {
       navigate("/login");
     }
   }, [isLogin, navigate]);
-
-  useEffect(() => {
-    if (isLogin && authtoken) {
-      connectSocket(authtoken);
-    }
-  }, [isLogin, authtoken]);
 
   if (!isLogin) {
     return null;

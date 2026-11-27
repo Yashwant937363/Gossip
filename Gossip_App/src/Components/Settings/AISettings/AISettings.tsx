@@ -6,7 +6,7 @@ import {
   changeLanguage,
   changeSummarizationFormat,
 } from "../../../store/slices/UserSlice";
-import { socket } from "../../../socket/main";
+import { socket } from "../../../socket";
 import { useNavigate } from "react-router-dom";
 import { RootState, AppDispatch } from "../../../store/store";
 import {

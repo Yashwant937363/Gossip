@@ -2,21 +2,26 @@ import {
   SummarizationSettings,
   TranslationSettings,
   UserSession,
-  UserSettings,
 } from "@gossip/shared";
 import { SearchUserItem } from "@gossip/shared/schemas/user.schema";
 
+export type ServerUserSession = UserSession & {
+  socketId: string;
+};
+
 // Abstract class
 export abstract class UserStore {
-  abstract getUser(uid: string): UserSession | undefined;
+  abstract getUser(uid: string): ServerUserSession | undefined;
+
+  abstract getSocketId(uid: string): string | undefined;
 
   abstract findUser(uid: string, socketuid: string): SearchUserItem[];
 
-  abstract saveUser(uid: string, session: UserSession): void;
+  abstract saveUser(uid: string, session: UserSession, socketId: string): void;
 
-  abstract findAllUsers(): UserSession[];
+  abstract findAllUsers(): ServerUserSession[];
 
-  abstract userDisconnected(uid: string): void;
+  abstract userDisconnected(uid: string, socketId: string): boolean;
 
   abstract updateTranslationSettings(
     uid: string,
@@ -30,7 +35,7 @@ export abstract class UserStore {
 }
 
 export class ServerUserStore extends UserStore {
-  private users = new Map<string, UserSession>();
+  private users = new Map<string, ServerUserSession>();
 
   findUser(uid: string, socketuid: string): SearchUserItem[] {
     const regex = new RegExp(uid.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
@@ -44,19 +49,29 @@ export class ServerUserStore extends UserStore {
       }));
   }
 
-  getUser(uid: string): UserSession | undefined {
+  getUser(uid: string): ServerUserSession | undefined {
     return this.users.get(uid);
   }
 
-  saveUser(uid: string, session: UserSession): void {
-    this.users.set(uid, session);
+  getSocketId(uid: string): string | undefined {
+    return this.users.get(uid)?.socketId;
   }
 
-  userDisconnected(uid: string): void {
+  saveUser(uid: string, session: UserSession, socketId: string): void {
+    this.users.set(uid, { ...session, socketId });
+  }
+
+  userDisconnected(uid: string, socketId: string): boolean {
+    const current = this.users.get(uid);
+    if (!current || current.socketId !== socketId) {
+      return false;
+    }
+
     this.users.delete(uid);
+    return true;
   }
 
-  findAllUsers(): UserSession[] {
+  findAllUsers(): ServerUserSession[] {
     return [...this.users.values()];
   }
 
@@ -81,6 +96,7 @@ export class ServerUserStore extends UserStore {
       user.settings.summarization = summarizationObject;
     }
   }
+
   clear(): void {
     this.users.clear();
   }
