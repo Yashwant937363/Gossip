@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
-import fs from "node:fs";
 import { uploadImage } from "../services/cloudinary.service.js";
 import { UsersStore } from "../store/sessionStore.js";
+import { removeFile } from "../utils/file.js";
 import {
   APIError,
   GetFriendsAndChatsResponse,
@@ -132,15 +132,11 @@ export const uploadChatImage = async (
 
     const secureUrl = await uploadImage(req.file.path);
 
-    if (fs.existsSync(req.file.path)) {
-      fs.unlinkSync(req.file.path);
-    }
     req.log.info({ id: res.locals.id }, "Image Uploaded Successfully");
     return res.status(200).json({ success: true, url: secureUrl });
   } catch (error) {
-    if (req.file?.path && fs.existsSync(req.file.path)) {
-      fs.unlinkSync(req.file.path);
-    }
     next(error);
+  } finally {
+    await removeFile(req.file?.path).catch(() => {});
   }
 };

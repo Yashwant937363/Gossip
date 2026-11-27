@@ -16,6 +16,7 @@ import {
   EmailAlreadyExistsError,
   InvalidCredentialsError,
 } from "../errors/index.js";
+import { removeFile } from "../utils/file.js";
 
 export const getUser = async (
   req: Request,
@@ -54,10 +55,10 @@ export const signupUser = async (
       throw new EmailAlreadyExistsError();
     }
     if (req.file) {
-      const inputimagepath = `./assets/profile/${req.file.filename}`;
-      const outputimagepath = `./assets/profile/${req.body.email}.png`;
+      const inputImagePath = req.file.path;
+      const outputImagePath = `${inputImagePath}.png`;
 
-      url = await processAndUploadImage(inputimagepath, outputimagepath);
+      url = await processAndUploadImage(inputImagePath, outputImagePath);
     }
     const password = await getHash(req.body.password);
     const newUser = await createUser({
@@ -74,6 +75,8 @@ export const signupUser = async (
     res.status(201).json({ authtoken: authtoken, uid: newUser.uid });
   } catch (error) {
     next(error);
+  } finally {
+    await removeFile(req.file?.path).catch(() => {});
   }
 };
 

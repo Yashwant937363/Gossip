@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import * as z from "zod";
+import { removeFile } from "../utils/file.js";
 
 export const validateBody = (schema: z.ZodObject) => {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -7,6 +8,9 @@ export const validateBody = (schema: z.ZodObject) => {
       const body = schema.safeParse(req.body);
 
       if (!body.success) {
+        if (req.file?.path) {
+          void removeFile(req.file.path).catch(() => {});
+        }
         req.log.warn(
           {
             errors: body.error.issues,
