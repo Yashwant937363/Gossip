@@ -20,7 +20,7 @@ export const searchUsers = async (
       return res.status(400).json({ error: "Search query is required" });
     }
 
-    const users = await searchUsersInDb(query);
+    const users = await searchUsersInDb(query, res.locals.id);
     req.log.info({ userid: res.locals.id }, "Sucess Search Users");
     return res.status(200).json({ users });
   } catch (error) {

@@ -39,16 +39,21 @@ export async function createUser(userData: CreateUserInput) {
   return await User.create(userData);
 }
 
-export async function searchUsers(query: string) {
+export async function searchUsers(query: string, excludeUserId?: string) {
   const trimmed = query.trim();
+  const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   return await User.find({
+    ...(excludeUserId ? { _id: { $ne: excludeUserId } } : {}),
     $or: [
-      { uid: { $regex: trimmed, $options: "i" } },
-      { username: { $regex: trimmed, $options: "i" } },
-      { firstname: { $regex: trimmed, $options: "i" } },
-      { lastname: { $regex: trimmed, $options: "i" } },
+      { uid: { $regex: escaped, $options: "i" } },
+      { username: { $regex: escaped, $options: "i" } },
+      { firstname: { $regex: escaped, $options: "i" } },
+      { lastname: { $regex: escaped, $options: "i" } },
     ],
-  }).select("-_id -__v -Password");
+  })
+    .select({ uid: 1, username: 1, profile: 1, _id: 0 })
+    .lean()
+    .limit(5);
 }
 
 export async function updateTranslationLanguage(id: string, language: string) {
