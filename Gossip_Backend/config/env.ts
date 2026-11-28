@@ -18,6 +18,16 @@ interface ENV {
   lokiUrl: string;
   lokiUsername: string;
   lokiToken: string;
+  mockAi: boolean;
+  mockAiLatencyMs: number;
+  mockUpload: boolean;
+  mockUploadLatencyMs: number;
+}
+
+function parseLatencyMs(raw: string | undefined, fallback: number): number {
+  if (raw === undefined || raw.trim() === "") return fallback;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
 }
 
 export const env: ENV = {
@@ -37,4 +47,8 @@ export const env: ENV = {
   lokiUrl: process.env.LOKI_URL || "",
   lokiUsername: process.env.LOKI_USERNAME || "",
   lokiToken: process.env.LOKI_TOKEN || "",
+  mockAi: process.env.MOCK_AI === "true",
+  mockAiLatencyMs: parseLatencyMs(process.env.MOCK_AI_LATENCY_MS, 50),
+  mockUpload: process.env.MOCK_UPLOAD === "true",
+  mockUploadLatencyMs: parseLatencyMs(process.env.MOCK_UPLOAD_LATENCY_MS, 50),
 };

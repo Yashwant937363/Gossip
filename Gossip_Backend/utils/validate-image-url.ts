@@ -1,3 +1,5 @@
+import { env } from "../config/env.js";
+
 export async function validateImageUrl(url: string): Promise<void> {
   // 1. Validate URL format
   let parsedUrl: URL;
@@ -10,6 +12,10 @@ export async function validateImageUrl(url: string): Promise<void> {
 
   if (!["http:", "https:"].includes(parsedUrl.protocol)) {
     throw new Error("Image URL must use HTTP or HTTPS");
+  }
+
+  if (env.mockAi) {
+    return;
   }
 
   // 2. Check whether the URL points to an image

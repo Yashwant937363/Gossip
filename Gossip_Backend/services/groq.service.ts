@@ -3,6 +3,8 @@ import type {
   ChatCompletionMessageParam,
 } from "groq-sdk/resources/chat/completions.js";
 import groq, { GROQ_MODELS } from "../config/groq.js";
+import { env } from "../config/env.js";
+import { simulateMockLatency } from "../utils/mock-delay.js";
 import ANALYZE_IMAGE_SYSTEM_PROMPT from "../prompts/analyze-image.prompt.js";
 import {
   human_behavior_message,
@@ -44,11 +46,75 @@ export type GroqRunner = (
 ) => Promise<string>;
 
 /**
+ * Mock Groq runner used when MOCK_AI=true for load testing without external API calls.
+ */
+export async function mockGroqChat(
+  params: ChatCompletionCreateParamsNonStreaming,
+): Promise<string> {
+  await simulateMockLatency(env.mockAiLatencyMs);
+
+  const systemMsg = params.messages.find((m) => m.role === "system");
+  const systemContent =
+    typeof systemMsg?.content === "string" ? systemMsg.content : "";
+  const userMsg = [...params.messages].reverse().find((m) => m.role === "user");
+  const userContent =
+    typeof userMsg?.content === "string" ? userMsg.content : "";
+
+  if (params.response_format?.type === "json_object") {
+    if (systemContent.includes(TRANSLATE_CHAT_SYSTEM_PROMPT)) {
+      const parsed = JSON.parse(userContent) as TranslateMessagesInput;
+      return JSON.stringify({
+        messages: (parsed.messages || []).map((m) => ({
+          id: m.id,
+          translatedText: `[mock-${parsed.to}] ${m.text}`,
+        })),
+        language: parsed.to,
+      });
+    }
+
+    if (systemContent.includes(ANALYZE_IMAGE_SYSTEM_PROMPT)) {
+      return JSON.stringify({
+        title: "Mock Image Analysis",
+        description: "A mock image description generated during load testing.",
+        details: ["Mock visual detail 1", "Mock visual detail 2"],
+        mood: "Neutral",
+      });
+    }
+
+    if (systemContent.includes(output_bullet_points)) {
+      return JSON.stringify({
+        summary: ["Mock summary point 1.", "Mock summary point 2."],
+      });
+    }
+
+    if (systemContent.includes(output_structured)) {
+      return JSON.stringify({
+        summary: {
+          topic: "Mock Conversation Topic",
+          keyPoints: ["Mock key point 1", "Mock key point 2"],
+          conclusion: "Mock conclusion.",
+        },
+      });
+    }
+
+    return JSON.stringify({
+      summary: "This is a mock paragraph summary generated during load testing.",
+    });
+  }
+
+  return "This is a mock chatbot response generated during load testing.";
+}
+
+/**
  * Default production runner that executes the call using the real Groq client.
  */
 export async function executeGroqChat(
   params: ChatCompletionCreateParamsNonStreaming,
 ): Promise<string> {
+  if (env.mockAi) {
+    return mockGroqChat(params);
+  }
+
   try {
     const response = await groq.chat.completions.create(params);
     return response.choices[0]?.message?.content || "";

@@ -123,9 +123,20 @@ process.on("uncaughtException", (error) => {
 async function startServer(): Promise<void> {
   try {
     await connectDatabase(env.dbUrl);
-    httpServer.listen(env.port, () =>
-      logger.info("Server running on PORT : " + env.port),
-    );
+    httpServer.listen(env.port, () => {
+      logger.info("Server running on PORT : " + env.port);
+      if (env.mockAi || env.mockUpload) {
+        logger.warn(
+          {
+            mockAi: env.mockAi,
+            mockAiLatencyMs: env.mockAiLatencyMs,
+            mockUpload: env.mockUpload,
+            mockUploadLatencyMs: env.mockUploadLatencyMs,
+          },
+          "Load-test mock mode is ACTIVE for external services",
+        );
+      }
+    });
   } catch (error) {
     logger.error({ err: error }, "Failed to start server");
     logger.flush?.();
