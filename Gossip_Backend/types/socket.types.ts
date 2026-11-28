@@ -14,6 +14,7 @@ export interface SocketData {
   activeEvents?: number;
   isReplacing?: boolean;
   onEventsDrained?: () => void;
+  handshakeStartedAt?: bigint;
 }
 
 export interface InterServerEvents {}

@@ -26,6 +26,7 @@ import { recordAppError } from "./metrics/registry.js";
 import {
   recordSocketConnect,
   recordSocketDisconnect,
+  recordSocketHandshakeDuration,
 } from "./metrics/socket.metrics.js";
 
 const SHUTDOWN_TIMEOUT_MS = 10_000;
@@ -47,12 +48,10 @@ const io: TypedServer = new Server<
 io.use(authSocket);
 
 const onConnection = async (socket: TypedSocket) => {
-  const connectedAt = process.hrtime.bigint();
   recordSocketConnect();
 
   socket.on("disconnect", () => {
-    const durationSeconds = Number(process.hrtime.bigint() - connectedAt) / 1e9;
-    recordSocketDisconnect(durationSeconds);
+    recordSocketDisconnect();
   });
 
   socket.data.log.info("Authenticated user connected:");
@@ -65,6 +64,12 @@ const onConnection = async (socket: TypedSocket) => {
   registerChatHandlers(io, socket, UsersStore);
   registerCallHandlers(io, socket);
   registerSettingsHandlers(io, socket, UsersStore);
+
+  if (socket.data.handshakeStartedAt !== undefined) {
+    const handshakeSeconds =
+      Number(process.hrtime.bigint() - socket.data.handshakeStartedAt) / 1e9;
+    recordSocketHandshakeDuration(handshakeSeconds);
+  }
 };
 
 io.on("connection", onConnection);

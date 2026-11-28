@@ -6,11 +6,12 @@ import { register } from "./registry.js";
 import {
   recordSocketConnect,
   recordSocketDisconnect,
+  recordSocketHandshakeDuration,
   socketActiveConnections,
   socketConnectedTotal,
-  socketConnectionDurationSeconds,
   socketConnectionErrorsTotal,
   socketConnectionsTotal,
+  socketHandshakeDurationSeconds,
 } from "./socket.metrics.js";
 
 describe("Socket Connection Metrics", () => {
@@ -69,7 +70,7 @@ describe("Socket Connection Metrics", () => {
     expect(errors.values[0].labels).toEqual({ reason: "user_not_found" });
   });
 
-  it("tracks active connections, total connected, and session duration on connect/disconnect", async () => {
+  it("tracks active connections and total connected on connect/disconnect", async () => {
     recordSocketConnect();
 
     const activeDuring = await socketActiveConnections.get();
@@ -77,15 +78,36 @@ describe("Socket Connection Metrics", () => {
     expect(activeDuring.values[0].value).toBe(1);
     expect(connected.values[0].value).toBe(1);
 
-    recordSocketDisconnect(42.5);
+    recordSocketDisconnect();
 
     const activeAfter = await socketActiveConnections.get();
-    const duration = await socketConnectionDurationSeconds.get();
-    const countMetric = duration.values.find((v) =>
+    expect(activeAfter.values[0].value).toBe(0);
+  });
+
+  it("records handshake start timestamp in authSocket and observes handshake duration", async () => {
+    const socket: any = {
+      handshake: { auth: { token: "Bearer valid-token" } },
+      data: {},
+    };
+    const next = vi.fn();
+    mockVerifyToken.mockReturnValue({ id: "user-1" });
+    mockFindById.mockResolvedValue({
+      _id: { toString: () => "user-1" },
+      uid: "u1234",
+      profile: "",
+      username: "Alice",
+      settings: {},
+    } as any);
+
+    await authSocket(socket, next);
+    expect(typeof socket.data.handshakeStartedAt).toBe("bigint");
+    expect(next).toHaveBeenCalledWith();
+
+    recordSocketHandshakeDuration(0.042);
+    const handshakeMetric = await socketHandshakeDurationSeconds.get();
+    const countMetric = handshakeMetric.values.find((v) =>
       v.metricName?.endsWith("_count"),
     );
-
-    expect(activeAfter.values[0].value).toBe(0);
     expect(countMetric?.value).toBe(1);
   });
 });

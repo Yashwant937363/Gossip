@@ -36,10 +36,10 @@ export const socketConnectionErrorsTotal = new Counter({
   registers: [register],
 });
 
-export const socketConnectionDurationSeconds = new Histogram({
-  name: "socket_connection_duration_seconds",
-  help: "Lifetime duration of Socket.io connections in seconds",
-  buckets: [1, 5, 15, 30, 60, 120, 300, 600, 1800, 3600, 7200],
+export const socketHandshakeDurationSeconds = new Histogram({
+  name: "socket_handshake_duration_seconds",
+  help: "Duration of Socket.io handshake auth and session setup in seconds",
+  buckets: [0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5],
   registers: [register],
 });
 
@@ -96,11 +96,17 @@ export function recordSocketConnect(): void {
 }
 
 /**
- * Records a Socket.io disconnection, decrements active connections, and observes session lifetime.
+ * Records a Socket.io disconnection and decrements active connections.
  */
-export function recordSocketDisconnect(durationSeconds: number): void {
+export function recordSocketDisconnect(): void {
   socketActiveConnections.dec();
-  socketConnectionDurationSeconds.observe(durationSeconds);
+}
+
+/**
+ * Records the duration from handshake auth start until session setup completes.
+ */
+export function recordSocketHandshakeDuration(durationSeconds: number): void {
+  socketHandshakeDurationSeconds.observe(durationSeconds);
 }
 
 /**

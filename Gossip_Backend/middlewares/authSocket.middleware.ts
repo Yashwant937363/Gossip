@@ -14,6 +14,7 @@ export async function authSocket(
   next: (err?: Error) => void,
 ) {
   recordSocketConnectionAttempt();
+  socket.data.handshakeStartedAt = process.hrtime.bigint();
   const socketLog = logger.child({ socketId: socket.id });
   try {
     const authHeader = socket.handshake.auth?.token;

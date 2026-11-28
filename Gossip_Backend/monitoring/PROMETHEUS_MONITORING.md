@@ -75,13 +75,13 @@ Implemented in [authSocket.middleware.ts](file:///home/yashwant/MyProject/Gossip
 A WebSocket connection is **long-lived** (minutes or hours), unlike an HTTP request (milliseconds). Tracking connections tells you:
 - How many users are online right now (`socket_active_connections`).
 - Whether users are failing to authenticate (`socket_connection_errors_total` with `reason`: `missing_token`, `invalid_token`, `user_not_found`).
-- How long users stay connected (`socket_connection_duration_seconds`).
+- How long handshake auth and session setup take before the socket is ready (`socket_handshake_duration_seconds`).
 
 ### How It Works
-1. **Handshake Attempt (`authSocket`)**: Calls `recordSocketConnectionAttempt()` as soon as a client tries to connect.
+1. **Handshake Attempt (`authSocket`)**: Calls `recordSocketConnectionAttempt()` and records `socket.data.handshakeStartedAt` as soon as a client tries to connect.
 2. **Auth Rejection**: If token is missing, invalid, or user is not found, calls `recordSocketConnectionError(reason)` (which also increments `app_errors_total`).
-3. **Connected (`onConnection` in `index.ts`)**: Calls `recordSocketConnect()` to increment `socket_connected_total` and `socket_active_connections`, and saves the start timestamp (`connectedAt`).
-4. **Disconnected (`socket.on("disconnect")`)**: Calculates how long the socket was open and calls `recordSocketDisconnect(durationSeconds)` to decrement `socket_active_connections` and record session lifetime.
+3. **Connected (`onConnection` in `index.ts`)**: Calls `recordSocketConnect()` to increment `socket_connected_total` and `socket_active_connections`, runs `setupUserSession`, registers handlers, and then calls `recordSocketHandshakeDuration(...)` to record the total handshake + setup latency.
+4. **Disconnected (`socket.on("disconnect")`)**: Calls `recordSocketDisconnect()` to decrement `socket_active_connections`.
 
 ---
 

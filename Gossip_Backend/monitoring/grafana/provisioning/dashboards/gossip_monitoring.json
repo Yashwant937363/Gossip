@@ -416,22 +416,22 @@
       },
       "gridPos": { "h": 8, "w": 8, "x": 8, "y": 37 },
       "id": 16,
-      "title": "Socket Session Lifetime (P90, P95, P99)",
+      "title": "Socket Handshake & Setup Latency (P90, P95, P99)",
       "type": "timeseries",
       "targets": [
         {
           "datasource": "Prometheus",
-          "expr": "histogram_quantile(0.90, sum(rate(socket_connection_duration_seconds_bucket{job=\"gossip-backend\"}[5m])) by (le))",
+          "expr": "histogram_quantile(0.90, sum(rate(socket_handshake_duration_seconds_bucket{job=\"gossip-backend\"}[5m])) by (le))",
           "legendFormat": "P90"
         },
         {
           "datasource": "Prometheus",
-          "expr": "histogram_quantile(0.95, sum(rate(socket_connection_duration_seconds_bucket{job=\"gossip-backend\"}[5m])) by (le))",
+          "expr": "histogram_quantile(0.95, sum(rate(socket_handshake_duration_seconds_bucket{job=\"gossip-backend\"}[5m])) by (le))",
           "legendFormat": "P95"
         },
         {
           "datasource": "Prometheus",
-          "expr": "histogram_quantile(0.99, sum(rate(socket_connection_duration_seconds_bucket{job=\"gossip-backend\"}[5m])) by (le))",
+          "expr": "histogram_quantile(0.99, sum(rate(socket_handshake_duration_seconds_bucket{job=\"gossip-backend\"}[5m])) by (le))",
           "legendFormat": "P99"
         }
       ]
