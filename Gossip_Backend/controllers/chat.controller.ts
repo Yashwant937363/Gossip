@@ -12,7 +12,11 @@ import {
   findUsersByUids,
 } from "../repository/user.repository.js";
 import { getFriendUids } from "../repository/friend.repository.js";
-import { getUserChatHistory } from "../repository/chat.repository.js";
+import {
+  getUserChatHistory,
+  saveMessageTranslations,
+} from "../repository/chat.repository.js";
+import { translateMessages } from "../services/groq.service.js";
 import { JWTPayload } from "../types/auth.types.js";
 
 export const getFriendsandChats = async (
@@ -73,46 +77,61 @@ export const getFriendsandChats = async (
       };
     });
 
-    let chats = await getUserChatHistory(uid);
-    // if (
-    //   user.settings.translation.alwaysTranslate &&
-    //   user.settings.translation.language !== "original"
-    // ) {
-    //   const filterChatsForTranslation = chats.filter(
-    //     (chat) =>
-    //       chat.Receiver_ID === uid &&
-    //       chat.type === "text" &&
-    //       !chat.translatedText.some(
-    //         (t) => t?.language === user.settings.translation.language,
-    //       ),
-    //   );
-    //   const inputTranslateText = filterChatsForTranslation.map((chat) => {
-    //     return {
-    //       id: chat._id.toString(),
-    //       text: chat.text,
-    //     };
-    //   });
-    //   const translatedReceivedChats = await translateMultipleMessages({
-    //     messages: inputTranslateText,
-    //     to: user.settings.translation.language,
-    //   });
-    //   const { messages, language } = translatedReceivedChats;
-    //   if (translatedReceivedChats) {
-    //     chats = chats.map((chat) => {
-    //       const translatedText = messages.find(
-    //         (message) => message.id === chat._id.toString(),
-    //       );
-    //       if (translatedText) {
-    //         chat.translatedText.push({
-    //           language,
-    //           translatedText: translatedText.translatedText,
-    //         });
-    //       }
-    //       return chat;
-    //     });
-    //   }
-    // }
-    // console.log("Updated", chats);
+    const chats = await getUserChatHistory(uid);
+    const targetLanguage = user.settings?.translation?.language;
+    if (
+      user.settings?.translation?.alwaysTranslate &&
+      targetLanguage &&
+      targetLanguage !== "original"
+    ) {
+      const inputTranslateText = chats
+        .filter(
+          (chat) =>
+            chat.receiverUid === uid &&
+            chat.type === "text" &&
+            !chat.translatedText.some((t) => t?.language === targetLanguage),
+        )
+        .map((chat) => ({
+          id: chat._id.toString(),
+          text: chat.text,
+        }));
+
+      if (inputTranslateText.length > 0) {
+        try {
+          const translatedResult = await translateMessages({
+            messages: inputTranslateText,
+            to: targetLanguage,
+          });
+
+          if (translatedResult.messages.length > 0) {
+            await saveMessageTranslations(
+              translatedResult.language,
+              translatedResult.messages,
+              uid,
+            );
+
+            const translationMap = new Map(
+              translatedResult.messages.map((m) => [m.id, m.translatedText]),
+            );
+
+            for (const chat of chats) {
+              const translatedText = translationMap.get(chat._id.toString());
+              if (translatedText) {
+                chat.translatedText.push({
+                  language: translatedResult.language,
+                  translatedText,
+                });
+              }
+            }
+          }
+        } catch (err) {
+          req.log.warn(
+            { err, uid },
+            "Auto-translation during getFriendsandChats failed",
+          );
+        }
+      }
+    }
     req.log.info({ id: user.id }, "Friends Fetch Successful");
     res.status(200).json({ friends: newFriends, chats });
   } catch (error) {
